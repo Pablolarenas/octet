@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
 //
 // (C) Andy Thomason 2012-2014
 //
@@ -23,10 +23,10 @@ namespace octet {
     mat4t modelToWorld;
 
     // half the width of the sprite
-    float halfWidth;
+    float Width;
 
     // half the height of the sprite
-    float halfHeight;
+    float Height;
 
     // what texture is on our sprite
     int texture;
@@ -42,8 +42,8 @@ namespace octet {
     void init(int _texture, float x, float y, float w, float h) {
       modelToWorld.loadIdentity();
       modelToWorld.translate(x, y, 0);
-      halfWidth = w * 0.5f;
-      halfHeight = h * 0.5f;
+      Width = w * 1.0f;
+      Height = h * 1.0f;
       texture = _texture;
       enabled = true;
     }
@@ -68,10 +68,10 @@ namespace octet {
       // this is an array of the positions of the corners of the sprite in 3D
       // a straight "float" here means this array is being generated here at runtime.
       float vertices[] = {
-        -halfWidth, -halfHeight, 0,
-         halfWidth, -halfHeight, 0,
-         halfWidth,  halfHeight, 0,
-        -halfWidth,  halfHeight, 0,
+        -Width, -Height, 0,
+         Width, -Height, 0,
+         Width,  Height, 0,
+        -Width,  Height, 0,
       };
 
       // attribute_pos (=0) is position of each corner
@@ -118,8 +118,8 @@ namespace octet {
       // both distances have to be under the sum of the halfwidths
       // for a collision
       return
-        (fabsf(dx) < halfWidth + rhs.halfWidth) &&
-        (fabsf(dy) < halfHeight + rhs.halfHeight)
+        (fabsf(dx) < Width + rhs.Width) &&
+        (fabsf(dy) < Height + rhs.Height)
       ;
     }
 
@@ -127,7 +127,7 @@ namespace octet {
       float dx = rhs.modelToWorld[3][0] - modelToWorld[3][0];
 
       return
-        (fabsf(dx) < halfWidth + margin)
+        (fabsf(dx) < Width + margin)
       ;
     }
 
@@ -146,8 +146,8 @@ namespace octet {
 
     enum {
       num_sound_sources = 8,
-      num_rows = 5,
-      num_cols = 10,
+      num_rows = 4,
+      num_cols = 4,
       num_missiles = 2,
       num_bombs = 2,
       num_borders = 4,
@@ -217,7 +217,7 @@ namespace octet {
       live_invaderers--;
       score++;
       if (live_invaderers == 4) {
-        invader_velocity *= 4;
+        invader_velocity *= 12;
       } else if (live_invaderers == 0) {
         game_over = true;
         sprites[game_over_sprite].translate(-20, 0);
