@@ -23,10 +23,10 @@ namespace octet {
     mat4t modelToWorld;
 
     // half the width of the sprite
-    float Width;
+    float HalfWidth;
 
     // half the height of the sprite
-    float Height;
+    float HalfHeight;
 
     // what texture is on our sprite
     int texture;
@@ -42,8 +42,8 @@ namespace octet {
     void init(int _texture, float x, float y, float w, float h) {
       modelToWorld.loadIdentity();
       modelToWorld.translate(x, y, 0);
-      Width = w * 1.0f;
-      Height = h * 1.0f;
+	  HalfWidth = w * 0.5f;
+	  HalfHeight = h * 0.5f;
       texture = _texture;
       enabled = true;
     }
@@ -68,10 +68,10 @@ namespace octet {
       // this is an array of the positions of the corners of the sprite in 3D
       // a straight "float" here means this array is being generated here at runtime.
       float vertices[] = {
-        -Width, -Height, 0,
-         Width, -Height, 0,
-         Width,  Height, 0,
-        -Width,  Height, 0,
+        -HalfWidth, -HalfHeight, 0,
+		HalfWidth, -HalfHeight, 0,
+		HalfWidth,  HalfHeight, 0,
+        -HalfWidth, HalfHeight, 0,
       };
 
       // attribute_pos (=0) is position of each corner
@@ -98,10 +98,19 @@ namespace octet {
       glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
 
-    // move the object
-    void translate(float x, float y) {
-      modelToWorld.translate(x, y, 0);
-    }
+	// move the object
+	void translate(float x, float y) {
+		modelToWorld.translate(x, y, 0);
+	}
+	// move the object
+	void rotate(float angle) {
+		modelToWorld.rotate(angle, 0, 0, 1);
+	}
+
+	// move the object
+	void change_sprite(int temp_sprite) {
+		texture = temp_sprite;
+	}
 
     // position the object relative to another.
     void set_relative(sprite &rhs, float x, float y) {
@@ -118,8 +127,8 @@ namespace octet {
       // both distances have to be under the sum of the halfwidths
       // for a collision
       return
-        (fabsf(dx) < Width + rhs.Width) &&
-        (fabsf(dy) < Height + rhs.Height)
+        (fabsf(dx) < HalfWidth + rhs.HalfWidth) &&
+        (fabsf(dy) < HalfHeight + rhs.HalfHeight)
       ;
     }
 
@@ -127,7 +136,7 @@ namespace octet {
       float dx = rhs.modelToWorld[3][0] - modelToWorld[3][0];
 
       return
-        (fabsf(dx) < Width + margin)
+        (fabsf(dx) < HalfWidth + margin)
       ;
     }
 
@@ -206,6 +215,11 @@ namespace octet {
     // information for our text
     bitmap_font font;
 
+	GLuint ship_left;
+	GLuint ship_right;
+	GLuint ship_up;
+	GLuint ship_down;
+
     ALuint get_sound_source() { return sources[cur_source++ % num_sound_sources]; }
 
     // called when we hit an enemy
@@ -241,16 +255,34 @@ namespace octet {
       const float ship_speed = 0.05f;
       // left and right arrows
       if (is_key_down(key_left)) {
+		  sprites[ship_sprite].change_sprite(ship_left);
         sprites[ship_sprite].translate(-ship_speed, 0);
         if (sprites[ship_sprite].collides_with(sprites[first_border_sprite+2])) {
-          sprites[ship_sprite].translate(+ship_speed, 0);
+          sprites[ship_sprite].translate(+ship_speed, 0);	  
         }
-      } else if (is_key_down(key_right)) {
-        sprites[ship_sprite].translate(+ship_speed, 0);
-        if (sprites[ship_sprite].collides_with(sprites[first_border_sprite+3])) {
-          sprites[ship_sprite].translate(-ship_speed, 0);
-        }
-      }
+	  }
+	  else if (is_key_down(key_right)) {
+		  sprites[ship_sprite].change_sprite(ship_right);
+		  sprites[ship_sprite].translate(+ship_speed, 0);	  
+		  if (sprites[ship_sprite].collides_with(sprites[first_border_sprite + 3])) {
+			  sprites[ship_sprite].translate(-ship_speed, 0);
+		  }
+	  }
+	  else if (is_key_down(key_up)) {
+		  sprites[ship_sprite].change_sprite(ship_up);
+		  sprites[ship_sprite].translate(0, +ship_speed);
+		  if (sprites[ship_sprite].collides_with(sprites[first_border_sprite + 1])) {
+			  sprites[ship_sprite].translate(0, -ship_speed);
+		  }
+	  }
+	  else if (is_key_down(key_down)) {
+		  sprites[ship_sprite].change_sprite(ship_down);
+		  sprites[ship_sprite].translate(0, -ship_speed);
+		  if (sprites[ship_sprite].collides_with(sprites[first_border_sprite])) {
+			  sprites[ship_sprite].translate(0, +ship_speed);
+		  }
+	  }
+
     }
 
     // fire button (space)
@@ -423,9 +455,13 @@ namespace octet {
       cameraToWorld.translate(0, 0, 3);
 
       font_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/big_0.gif");
+	  //load all ship textures
 
-      GLuint ship = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/ship.gif");
-      sprites[ship_sprite].init(ship, 0, -2.75f, 0.25f, 0.25f);
+	  ship_left = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/ship_left.gif");
+	  ship_right = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/ship_right.gif");
+	  ship_down = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/ship_down.gif");
+      ship_up = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/ship_up.gif");
+      sprites[ship_sprite].init(ship_up, 0, -2.75f, 0.25f, 0.25f);
 
       GLuint GameOver = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/GameOver.gif");
       sprites[game_over_sprite].init(GameOver, 20, 0, 3, 1.5f);
@@ -481,9 +517,9 @@ namespace octet {
 
     // called every frame to move things
     void simulate() {
-      if (game_over) {
-        return;
-      }
+     // if (game_over) {
+      //  return;
+      //}
 
       move_ship();
 
