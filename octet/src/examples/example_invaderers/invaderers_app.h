@@ -15,7 +15,7 @@
 //   Simple game mechanics
 //   Texture loaded from GIF file
 //   Audio
-//
+//p
 
 namespace octet {
   class sprite {
