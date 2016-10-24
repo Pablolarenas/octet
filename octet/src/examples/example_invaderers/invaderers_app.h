@@ -18,6 +18,8 @@
 //
 
 #include <ctime>
+#include <iostream>
+using namespace std;
 namespace octet {
 	class sprite {
 		// where is our sprite (overkill for a 2D game!)
@@ -151,6 +153,7 @@ namespace octet {
 
 		// game state
 		bool game_over;
+		bool start_chasing=false;
 		int score;
 
 		// speed of enemy
@@ -166,12 +169,14 @@ namespace octet {
 		sprite sprites[300];
 
 		enum {
-			num_guards = 3,
+			num_guards = 6,
+			num_trap = 3,
 		};
 
 		int current_sprite;
 		int thief_sprite_index;
 		int first_guard_sprite_index;
+		int first_trap_sprite_index;
 
 		// random number generator
 		class random randomizer;
@@ -208,7 +213,33 @@ namespace octet {
 			for (int j = 0; j < num_guards; j++) {
 				game_over = sprites[thief_sprite_index].check_collision(sprites[first_guard_sprite_index + j]);
 				if (game_over)
+				{
+					printf("ctm");
+				}
 					break;
+			}
+			if (!start_chasing)
+			{
+				for (int j = 0; j < num_trap; j++)
+				{
+					start_chasing = sprites[thief_sprite_index].check_collision(sprites[first_trap_sprite_index + j]);
+					if (start_chasing)
+						break;
+				}
+			}
+			
+		}
+		
+		void chasing() {
+			//cout << sprites[first_guard_sprite_index].x << "/" << sprites[first_guard_sprite_index].y << ".\n";
+			for (int y = 1; y <= num_guards; y++) {
+				float movement_x = 0.15f;
+				float movement_y = 0.15f;
+				if (sprites[thief_sprite_index].x < sprites[y].x)
+					movement_x = movement_x * -1;
+				if (sprites[thief_sprite_index].y < sprites[y].y)
+					movement_y = movement_y * -1;
+				sprites[y].translate(movement_x, movement_y);
 			}
 		}
 
@@ -275,17 +306,20 @@ namespace octet {
 			for (int j=0;j<num_guards; j++) {
 				int r1 = rand() % 20 - 10,
 					r2 = rand() % 20 - 10;
-			sprites[current_sprite++].init(guard, j+2, j+2, 1, 1);
+			sprites[current_sprite++].init(guard, r1, r2, 1, 1);
 			}
 
 			GLuint diamond = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/diamond.gif");
 			sprites[current_sprite++].init(diamond, 8, 8, 1, 1);
 
 			GLuint trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/trap.gif");
-			sprites[current_sprite++].init(trap, 0, 4, 1, 1);
-			sprites[current_sprite++].init(trap, 0, 6, 1, 1);
-			sprites[current_sprite++].init(trap, 0, 8, 1, 1);
-
+			
+			first_trap_sprite_index = current_sprite;
+			for (int j = 0; j<num_trap; j++) {
+				int r1 = rand() % 20 - 10,
+					r2 = rand() % 20 - 10;
+				sprites[current_sprite++].init(trap, r1, r2, 1, 1);
+			}
 
 			game_over = false;
 		}
@@ -297,6 +331,10 @@ namespace octet {
 			}
 
 			move_ship();
+			if (start_chasing) {
+				chasing();
+			}
+
 
 		}
 
