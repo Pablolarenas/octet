@@ -20,6 +20,8 @@
 #include <ctime>
 #include <iostream>
 using namespace std;
+
+
 namespace octet {
 	class sprite {
 		// where is our sprite (overkill for a 2D game!)
@@ -36,6 +38,7 @@ namespace octet {
 
 		// true if this sprite is enabled.
 		bool enabled;
+
 	public:
 		float x;
 		float y;
@@ -110,8 +113,8 @@ namespace octet {
 			x += X;
 			y += Y;
 			modelToWorld.translate(X, Y, 0);
-
 		}
+
 		// move the object
 		void rotate(float angle) {
 			modelToWorld.rotate(angle, 0, 0, 1);
@@ -124,15 +127,14 @@ namespace octet {
 
 		bool check_collision(sprite &another_sprite) {
 			if (abs(another_sprite.x - x) <= 2*HalfWidth && abs(another_sprite.y - y) <= 2*HalfHeight)
-			{
-				return true;
-			}
+			  {
+				  return true;
+			  }
 
 			return false;
 		}
-
-
-
+		
+	
 	};
 
 	class invaderers_app : public octet::app {
@@ -143,21 +145,11 @@ namespace octet {
 		// shader to draw a textured triangle
 		texture_shader texture_shader_;
 
-		// timers for missiles and bombs
-		int missiles_disabled;
-		int bombs_disabled;
-
-		// accounting for bad guys
-		int live_invaderers;
-		int num_lives;
-
 		// game state
 		bool game_over;
+		bool game_fail;
 		bool start_chasing=false;
-		int score;
 
-		// speed of enemy
-		float invader_velocity;
 
 		// sounds
 		ALuint whoosh;
@@ -168,15 +160,22 @@ namespace octet {
 		// big array of sprites
 		sprite sprites[300];
 
+		// number of guards and traps (blue diamonds)
 		enum {
 			num_guards = 6,
 			num_trap = 3,
+			num_diamond = 1,
+
+			win_sprite,
+			lose_sprite,
 		};
 
+		//////////////// que es esto pedro?? ////////////////
 		int current_sprite;
 		int thief_sprite_index;
 		int first_guard_sprite_index;
 		int first_trap_sprite_index;
+		int first_diamond_sprite_index;
 
 		// random number generator
 		class random randomizer;
@@ -187,19 +186,15 @@ namespace octet {
 		// information for our text
 		bitmap_font font;
 
-		GLuint ship_left;
-		GLuint ship_right;
-		GLuint ship_up;
-		GLuint ship_down;
-
 		//ALuint get_sound_source() { return sources[cur_source++ % num_sound_sources]; }
 
-		// use the keyboard to move the ship
-		void move_ship() {
+		// use the keyboard to move the thief
+		void move_thief() {
 			const float ship_speed = 0.3f;
+
 			// left and right arrows
 			if (is_key_down(key_left)) {
-				sprites[thief_sprite_index].translate(-ship_speed, 0);
+				sprites[thief_sprite_index].translate(-ship_speed, 0);	
 			}
 			else if (is_key_down(key_right)) {
 				sprites[thief_sprite_index].translate(+ship_speed, 0);
@@ -210,16 +205,25 @@ namespace octet {
 			else if (is_key_down(key_down)) {
 				sprites[thief_sprite_index].translate(0, -ship_speed);
 			}
-			for (int j = 0; j < num_guards; j++) {
-				game_over = sprites[thief_sprite_index].check_collision(sprites[first_guard_sprite_index + j]);
+			
+		}
+
+		void critical_interactions () {
+
+			// if our thief collides with the true diamond! 
+			for (int j = 0; j < num_diamond; j++) {
+				game_over= sprites[thief_sprite_index].check_collision(sprites[first_diamond_sprite_index + j]);
 				if (game_over)
 				{
-					printf("ctm");
+					printf("you win!");
+					sprites[win_sprite].translate(-20, 0);
+					return;
 				}
-					break;
+				
 			}
-			if (!start_chasing)
-			{
+
+			// if our thief collides with a false diamond, a trap!! 
+			if (!start_chasing) {
 				for (int j = 0; j < num_trap; j++)
 				{
 					start_chasing = sprites[thief_sprite_index].check_collision(sprites[first_trap_sprite_index + j]);
@@ -227,19 +231,31 @@ namespace octet {
 						break;
 				}
 			}
+
+			// if our thief collides with a guard 
+			for (int j = 0; j < num_guards; j++) {
+				game_fail = sprites[thief_sprite_index].check_collision(sprites[first_guard_sprite_index + j]);
+				if (game_fail)
+				{
+					printf("you lose");
+					sprites[lose_sprite].translate(-20, 0);
+					return;
+				}
 			
+			}
+
 		}
-		
+
+		// how guards move in a chasing
 		void chasing() {
-			//cout << sprites[first_guard_sprite_index].x << "/" << sprites[first_guard_sprite_index].y << ".\n";
-			for (int y = 1; y <= num_guards; y++) {
-				float movement_x = 0.15f;
-				float movement_y = 0.15f;
-				if (sprites[thief_sprite_index].x < sprites[y].x)
+			for (int j = 1; j <= num_guards; j++) {
+				float movement_x = 0.025f;
+				float movement_y = 0.025f;
+				if (sprites[thief_sprite_index].x < sprites[first_guard_sprite_index].x)
 					movement_x = movement_x * -1;
-				if (sprites[thief_sprite_index].y < sprites[y].y)
+				if (sprites[thief_sprite_index].y < sprites[first_guard_sprite_index].y)
 					movement_y = movement_y * -1;
-				sprites[y].translate(movement_x, movement_y);
+				sprites[first_guard_sprite_index].translate(movement_x, movement_y);
 			}
 		}
 
@@ -310,10 +326,14 @@ namespace octet {
 			}
 
 			GLuint diamond = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/diamond.gif");
-			sprites[current_sprite++].init(diamond, 8, 8, 1, 1);
+			first_diamond_sprite_index = current_sprite;
+			for (int j = 0; j<num_diamond; j++) {
+				int r1 = rand() % 20 - 10,
+					r2 = rand() % 20 - 10;
+				sprites[current_sprite++].init(diamond, r1, r2, 1, 1);
+			}
 
 			GLuint trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/trap.gif");
-			
 			first_trap_sprite_index = current_sprite;
 			for (int j = 0; j<num_trap; j++) {
 				int r1 = rand() % 20 - 10,
@@ -321,20 +341,33 @@ namespace octet {
 				sprites[current_sprite++].init(trap, r1, r2, 1, 1);
 			}
 
+			GLuint GameOver = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/win.gif");
+			sprites[win_sprite].init(GameOver, 20, 0, 3, 1.5f);
+
+			GLuint GameFail = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/lose.gif");
+			sprites[lose_sprite].init(GameFail, 20, 0, 3, 1.5f);
+
+
 			game_over = false;
+			game_fail = false;
 		}
 
 		// called every frame to move things
 		void simulate() {
 			 if (game_over) {
-			  return;
+				return;
 			}
 
-			move_ship();
+			 if (game_fail) {
+				 return;
+			 }
+
+			move_thief();
+			critical_interactions();
+
 			if (start_chasing) {
 				chasing();
 			}
-
 
 		}
 
