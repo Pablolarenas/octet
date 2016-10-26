@@ -19,6 +19,7 @@
 
 #include <ctime>
 #include <iostream>
+
 using namespace std;
 
 
@@ -134,7 +135,20 @@ namespace octet {
 			return false;
 		}
 		
-	
+		// return true if this sprite collides with another.
+		// note the "const"s which say we do not modify either sprite
+		bool collides_with(const sprite &rhs) const {
+			float dx = rhs.modelToWorld[3][0] - modelToWorld[3][0];
+			float dy = rhs.modelToWorld[3][1] - modelToWorld[3][1];
+
+			// both distances have to be under the sum of the halfwidths
+			// for a collision
+			return
+				(fabsf(dx) < HalfWidth + rhs.HalfWidth) &&
+				(fabsf(dy) < HalfHeight + rhs.HalfHeight)
+				;
+		}
+
 	};
 
 	class invaderers_app : public octet::app {
@@ -158,25 +172,32 @@ namespace octet {
 		//ALuint sources[num_sound_sources];
 
 		// big array of sprites
-		sprite sprites[300];
+		sprite sprites[500];
 
 		// number of guards and traps (blue diamonds)
 		enum {
-			num_guards = 6,
-			num_trap = 3,
+			num_guards = 2,
+			num_trap = 4,
 			num_diamond = 1,
-
-			win_sprite,
-			lose_sprite,
+			num_borders = 4,
 		};
 
+		// speed of enemy
+		float guard_velocity;
+
 		//////////////// que es esto pedro?? ////////////////
-		int current_sprite;
+		int num_sprites;
 		int thief_sprite_index;
 		int first_guard_sprite_index;
 		int first_trap_sprite_index;
 		int first_diamond_sprite_index;
-
+		int win_sprite_index;
+		int lose_sprite_index;
+		int first_border_index;
+		/*int num_guards;
+		int num_trap;
+		int num_diamond;*/
+		
 		// random number generator
 		class random randomizer;
 
@@ -195,15 +216,27 @@ namespace octet {
 			// left and right arrows
 			if (is_key_down(key_left)) {
 				sprites[thief_sprite_index].translate(-ship_speed, 0);	
+				if (sprites[thief_sprite_index].collides_with(sprites[first_border_index + 2])) {
+					sprites[thief_sprite_index].translate(+ship_speed, 0);
+				}
 			}
 			else if (is_key_down(key_right)) {
 				sprites[thief_sprite_index].translate(+ship_speed, 0);
+				if (sprites[thief_sprite_index].collides_with(sprites[first_border_index + 3])) {
+					sprites[thief_sprite_index].translate(-ship_speed, 0);
+				}
 			}
 			else if (is_key_down(key_up)) {
 				sprites[thief_sprite_index].translate(0, +ship_speed);
+				if (sprites[thief_sprite_index].collides_with(sprites[first_border_index + 1])) {
+					sprites[thief_sprite_index].translate(0,-ship_speed);
+				}
 			}
 			else if (is_key_down(key_down)) {
 				sprites[thief_sprite_index].translate(0, -ship_speed);
+				if (sprites[thief_sprite_index].collides_with(sprites[first_border_index])) {
+					sprites[thief_sprite_index].translate(0,+ship_speed);
+				}
 			}
 			
 		}
@@ -216,7 +249,7 @@ namespace octet {
 				if (game_over)
 				{
 					printf("you win!");
-					sprites[win_sprite].translate(-20, 0);
+					sprites[win_sprite_index].translate(-20, 0);
 					return;
 				}
 				
@@ -238,7 +271,7 @@ namespace octet {
 				if (game_fail)
 				{
 					printf("you lose");
-					sprites[lose_sprite].translate(-20, 0);
+					sprites[lose_sprite_index].translate(-20, 0);
 					return;
 				}
 			
@@ -246,16 +279,24 @@ namespace octet {
 
 		}
 
+		void move_guard(float dx, float dy) {
+			for (int j = 0; j != num_guards; ++j) {
+				sprite &guard = sprites[first_guard_sprite_index+j];
+				guard.translate(dx, dy);
+
+			}
+		}
+
 		// how guards move in a chasing
 		void chasing() {
-			for (int j = 1; j <= num_guards; j++) {
+			for (int j = 0; j < num_guards; j++) {
 				float movement_x = 0.025f;
 				float movement_y = 0.025f;
-				if (sprites[thief_sprite_index].x < sprites[first_guard_sprite_index].x)
+				if (sprites[thief_sprite_index].x < sprites[first_guard_sprite_index+j].x)
 					movement_x = movement_x * -1;
-				if (sprites[thief_sprite_index].y < sprites[first_guard_sprite_index].y)
+				if (sprites[thief_sprite_index].y < sprites[first_guard_sprite_index+j].y)
 					movement_y = movement_y * -1;
-				sprites[first_guard_sprite_index].translate(movement_x, movement_y);
+				sprites[first_guard_sprite_index+j].translate(movement_x, movement_y);
 			}
 		}
 
@@ -309,8 +350,10 @@ namespace octet {
 
 			font_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/big_0.gif");
 			//load all ship textures
+			
+			//file_reader::set_up_totals(num_guards,num_trap,num_diamond);
 
-			current_sprite = 0;
+			int current_sprite = 0;
 			srand(time(NULL));
 
 			GLuint thief = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief.gif");
@@ -319,11 +362,32 @@ namespace octet {
 
 			GLuint guard = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/guard.gif");
 			first_guard_sprite_index = current_sprite;
-			for (int j=0;j<num_guards; j++) {
-				int r1 = rand() % 20 - 10,
-					r2 = rand() % 20 - 10;
-			sprites[current_sprite++].init(guard, r1, r2, 1, 1);
+			int guard_position[4] = {
+				7,3,
+				-6,-5
+			};
+			int index = 0;
+			for (int j = 0; j<num_guards; j++) {
+				sprites[current_sprite++].init(guard, guard_position[index], guard_position[index+1], 2, 2);
+				index += 2;
 			}
+
+
+			/*vec2 guard_location[num_guards];
+			for (int i = 0; i < num_guards; i++)
+				guard_location[i] = vec2(0, 0);*/
+		
+				//int r1 = rand() % 19 - 9,
+				//	r2 = rand() % 19 - 9;
+				//for (int i = 0; i < num_guards; i++) {
+				//	while (guard_location[i].x() == r1 && guard_location[i].y() == r2) {
+				//		r1 = rand() % 19 - 9;
+				//		r2 = rand() % 19 - 9;
+				//	}
+			/*}*/
+
+			/*	guard_location[j] = vec2(r1, r2);*/
+
 
 			GLuint diamond = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/diamond.gif");
 			first_diamond_sprite_index = current_sprite;
@@ -342,11 +406,24 @@ namespace octet {
 			}
 
 			GLuint GameOver = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/win.gif");
-			sprites[win_sprite].init(GameOver, 20, 0, 3, 1.5f);
+			win_sprite_index = current_sprite;
+			sprites[current_sprite++].init(GameOver, 20, 0, 3, 1.5f);
 
 			GLuint GameFail = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/lose.gif");
-			sprites[lose_sprite].init(GameFail, 20, 0, 3, 1.5f);
+			lose_sprite_index = current_sprite;
+			sprites[current_sprite++].init(GameFail, 20, 0, 3, 1.5f);
 
+			// set the border to white for clarity
+			GLuint white = resource_dict::get_texture_handle(GL_RGB, "#ffffff");
+			first_border_index = current_sprite;
+			sprites[current_sprite++].init(white, 0, -10, 20, 1);
+			sprites[current_sprite++].init(white, 0, 10, 20, 1);
+			sprites[current_sprite++].init(white, -10, 0, 1, 20);
+			sprites[current_sprite++].init(white, 10, 0, 1, 20);
+
+			num_sprites = current_sprite;
+
+			guard_velocity = 0.005f;
 
 			game_over = false;
 			game_fail = false;
@@ -363,11 +440,15 @@ namespace octet {
 			 }
 
 			move_thief();
+			
 			critical_interactions();
-
 			if (start_chasing) {
 				chasing();
 			}
+
+			//move_guard(guard_velocity, 0);
+
+
 
 		}
 
@@ -390,7 +471,7 @@ namespace octet {
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 			// draw all the sprites
-			for (int i = 0; i != current_sprite; ++i) {
+			for (int i = 0; i < num_sprites; ++i) {
 				sprites[i].render(texture_shader_, cameraToWorld);
 			}
 
