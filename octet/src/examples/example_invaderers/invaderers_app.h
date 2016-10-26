@@ -177,7 +177,7 @@ namespace octet {
 		// number of guards and traps (blue diamonds)
 		enum {
 			num_guards = 2,
-			num_trap = 4,
+			num_trap = 20,
 			num_diamond = 1,
 			num_borders = 4,
 		};
@@ -358,60 +358,46 @@ namespace octet {
 
 			GLuint thief = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief.gif");
 			thief_sprite_index = current_sprite;
-			sprites[current_sprite++].init(thief, 0, 0, 1, 1);
+				int r1 = rand() % 18 - 9,
+					r2 = 9;
+				sprites[current_sprite++].init(thief, r1, r2, 1, 1);
+		
 
 			GLuint guard = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/guard.gif");
 			first_guard_sprite_index = current_sprite;
 			int guard_position[4] = {
-				7,3,
+				 6,5,
 				-6,-5
 			};
 			int index = 0;
 			for (int j = 0; j<num_guards; j++) {
-				sprites[current_sprite++].init(guard, guard_position[index], guard_position[index+1], 2, 2);
+				sprites[current_sprite++].init(guard, guard_position[index], guard_position[index+1], 1, 1);
 				index += 2;
 			}
 
 
-			/*vec2 guard_location[num_guards];
-			for (int i = 0; i < num_guards; i++)
-				guard_location[i] = vec2(0, 0);*/
-		
-				//int r1 = rand() % 19 - 9,
-				//	r2 = rand() % 19 - 9;
-				//for (int i = 0; i < num_guards; i++) {
-				//	while (guard_location[i].x() == r1 && guard_location[i].y() == r2) {
-				//		r1 = rand() % 19 - 9;
-				//		r2 = rand() % 19 - 9;
-				//	}
-			/*}*/
-
-			/*	guard_location[j] = vec2(r1, r2);*/
-
-
-			GLuint diamond = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/diamond.gif");
-			first_diamond_sprite_index = current_sprite;
-			for (int j = 0; j<num_diamond; j++) {
-				int r1 = rand() % 20 - 10,
-					r2 = rand() % 20 - 10;
-				sprites[current_sprite++].init(diamond, r1, r2, 1, 1);
-			}
-
 			GLuint trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/trap.gif");
 			first_trap_sprite_index = current_sprite;
 			for (int j = 0; j<num_trap; j++) {
-				int r1 = rand() % 20 - 10,
-					r2 = rand() % 20 - 10;
+				int r1 = rand() % 17 - 7,
+					r2 = rand() % 17 - 8;
 				sprites[current_sprite++].init(trap, r1, r2, 1, 1);
 			}
 
+				GLuint diamond = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/diamond.gif");
+			first_diamond_sprite_index = current_sprite;
+					r1 = rand() % 20 - 10;
+					r2 = -9;
+				sprites[current_sprite++].init(diamond, r1, r2, 1, 1);
+			
+
 			GLuint GameOver = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/win.gif");
 			win_sprite_index = current_sprite;
-			sprites[current_sprite++].init(GameOver, 20, 0, 3, 1.5f);
+			sprites[current_sprite++].init(GameOver, 20, 0, 3, 1);
 
 			GLuint GameFail = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/lose.gif");
 			lose_sprite_index = current_sprite;
-			sprites[current_sprite++].init(GameFail, 20, 0, 3, 1.5f);
+			sprites[current_sprite++].init(GameFail, 20, 0, 3, 1);
 
 			// set the border to white for clarity
 			GLuint white = resource_dict::get_texture_handle(GL_RGB, "#ffffff");
@@ -446,7 +432,7 @@ namespace octet {
 				chasing();
 			}
 
-			//move_guard(guard_velocity, 0);
+			move_guard(guard_velocity, 0);
 
 
 
