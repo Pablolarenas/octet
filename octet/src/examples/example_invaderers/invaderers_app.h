@@ -152,6 +152,8 @@ namespace octet {
 	};
 
 	class invaderers_app : public octet::app {
+#pragma region VARIABLES
+
 		// Matrix to transform points in our camera space to the world.
 		// This lets us move our camera
 		mat4t cameraToWorld;
@@ -162,30 +164,35 @@ namespace octet {
 		// game state
 		bool game_over;
 		bool game_fail;
-		bool start_chasing=false;
+		bool start_chasing = false;
+		bool speed_up_flag = false;
 
-
-		// sounds
-		ALuint whoosh;
-		ALuint bang;
-		unsigned cur_source;
-		//ALuint sources[num_sound_sources];
 
 		// big array of sprites
 		sprite sprites[500];
 
 		// number of guards and traps (blue diamonds)
 		enum {
-			num_guards = 2,
-			num_trap = 20,
+			num_sound_sources=8,
+			easy = 30,
+			medium = 50,
+			hard = 10,
+			num_guards = 4,
+			num_trap = medium,
 			num_diamond = 1,
 			num_borders = 4,
 		};
 
+		// sounds
+		ALuint whoosh;
+		ALuint bang;
+		unsigned cur_source;
+		ALuint sources[num_sound_sources];
+
 		// speed of enemy
 		float guard_velocity;
 
-		//////////////// que es esto pedro?? ////////////////
+		
 		int num_sprites;
 		int thief_sprite_index;
 		int first_guard_sprite_index;
@@ -197,6 +204,9 @@ namespace octet {
 		/*int num_guards;
 		int num_trap;
 		int num_diamond;*/
+		GLuint empty_trap;
+		GLuint trap;
+		int frames = 0;
 		
 		// random number generator
 		class random randomizer;
@@ -207,7 +217,12 @@ namespace octet {
 		// information for our text
 		bitmap_font font;
 
+		float set_speed_guard = 0.02f;
+
 		//ALuint get_sound_source() { return sources[cur_source++ % num_sound_sources]; }
+
+#pragma endregion
+#pragma region FUNCTIONS
 
 		// use the keyboard to move the thief
 		void move_thief() {
@@ -265,6 +280,16 @@ namespace octet {
 				}
 			}
 
+			//speed up for each trap
+			for (int j = 0; j < num_trap; j++)
+			{
+				speed_up_flag = sprites[thief_sprite_index].check_collision(sprites[first_trap_sprite_index + j]);
+				if (speed_up_flag)
+				{
+					set_speed_guard += 0.005;
+				}
+			}
+
 			// if our thief collides with a guard 
 			for (int j = 0; j < num_guards; j++) {
 				game_fail = sprites[thief_sprite_index].check_collision(sprites[first_guard_sprite_index + j]);
@@ -287,11 +312,22 @@ namespace octet {
 			}
 		}
 
+		bool guard_collide(sprite &border) {
+			for (int j = 0; j != num_guards; ++j) {
+				sprite &guard = sprites[first_guard_sprite_index + j];
+				if (guard.collides_with(border)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+
 		// how guards move in a chasing
 		void chasing() {
 			for (int j = 0; j < num_guards; j++) {
-				float movement_x = 0.025f;
-				float movement_y = 0.025f;
+				float movement_x = set_speed_guard;
+				float movement_y = set_speed_guard;
 				if (sprites[thief_sprite_index].x < sprites[first_guard_sprite_index+j].x)
 					movement_x = movement_x * -1;
 				if (sprites[thief_sprite_index].y < sprites[first_guard_sprite_index+j].y)
@@ -333,6 +369,16 @@ namespace octet {
 			glDrawElements(GL_TRIANGLES, num_quads * 6, GL_UNSIGNED_INT, indices);
 		}
 
+		void turn_sprites_off() {
+			for (int j = 0; j < num_trap; j++) {
+				sprites[first_trap_sprite_index + j].change_sprite(empty_trap);
+			}
+			GLuint background = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/background_dark.gif");
+			sprites[0].init(background, 0, 0, 20, 20);
+		}
+
+#pragma endregion
+#pragma region MAIN GAME
 	public:
 
 		// this is called when we construct the class
@@ -353,40 +399,45 @@ namespace octet {
 			
 			//file_reader::set_up_totals(num_guards,num_trap,num_diamond);
 
-			int current_sprite = 0;
+			int current_sprite = 1;
 			srand(time(NULL));
+
+			GLuint background = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/background.gif");
+			sprites[0].init(background, 0,0, 20, 20);
 
 			GLuint thief = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief.gif");
 			thief_sprite_index = current_sprite;
 				int r1 = rand() % 18 - 9,
 					r2 = 9;
 				sprites[current_sprite++].init(thief, r1, r2, 1, 1);
-		
+	
+
+			empty_trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/empty.gif");
+			trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/trap.gif");
+			first_trap_sprite_index = current_sprite;
+			for (int j = 0; j<num_trap; j++) {
+				int r1 = rand() % 19 - 9,
+					r2 = rand() % 16 - 8;
+				sprites[current_sprite++].init(trap, r1, r2, 1.5, 1.5);
+			}
 
 			GLuint guard = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/guard.gif");
 			first_guard_sprite_index = current_sprite;
-			int guard_position[4] = {
-				 6,5,
-				-6,-5
+			int guard_position[9] = {
+				0,4,
+				4,7,
+				-2,-4,
+				-4,-8
 			};
 			int index = 0;
 			for (int j = 0; j<num_guards; j++) {
-				sprites[current_sprite++].init(guard, guard_position[index], guard_position[index+1], 1, 1);
+				sprites[current_sprite++].init(guard, guard_position[index], guard_position[index + 1], 1, 1);
 				index += 2;
 			}
 
-
-			GLuint trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/trap.gif");
-			first_trap_sprite_index = current_sprite;
-			for (int j = 0; j<num_trap; j++) {
-				int r1 = rand() % 17 - 7,
-					r2 = rand() % 17 - 8;
-				sprites[current_sprite++].init(trap, r1, r2, 1, 1);
-			}
-
-				GLuint diamond = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/diamond.gif");
+			GLuint diamond = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/diamond.gif");
 			first_diamond_sprite_index = current_sprite;
-					r1 = rand() % 20 - 10;
+					r1 = rand() % 19 - 9;
 					r2 = -9;
 				sprites[current_sprite++].init(diamond, r1, r2, 1, 1);
 			
@@ -400,19 +451,29 @@ namespace octet {
 			sprites[current_sprite++].init(GameFail, 20, 0, 3, 1);
 
 			// set the border to white for clarity
-			GLuint white = resource_dict::get_texture_handle(GL_RGB, "#ffffff");
+			GLuint white = resource_dict::get_texture_handle(GL_RGB, "assets/diamonds/brick2.gif");
 			first_border_index = current_sprite;
 			sprites[current_sprite++].init(white, 0, -10, 20, 1);
 			sprites[current_sprite++].init(white, 0, 10, 20, 1);
+			white = resource_dict::get_texture_handle(GL_RGB, "assets/diamonds/brick.gif");
 			sprites[current_sprite++].init(white, -10, 0, 1, 20);
 			sprites[current_sprite++].init(white, 10, 0, 1, 20);
 
+			// sounds
+			whoosh = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/invaderers/whoosh.wav");
+			bang = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/invaderers/bang.wav");
+			cur_source = 0;
+			alGenSources(num_sound_sources, sources);
+
 			num_sprites = current_sprite;
 
-			guard_velocity = 0.005f;
+			guard_velocity = 0.05f;
 
 			game_over = false;
 			game_fail = false;
+			//turn_sprites_off();
+
+			
 		}
 
 		// called every frame to move things
@@ -431,12 +492,25 @@ namespace octet {
 			if (start_chasing) {
 				chasing();
 			}
+			else
+			{
+				move_guard(guard_velocity, 0);
+			}
 
-			move_guard(guard_velocity, 0);
+			sprite &border = sprites[first_border_index + (guard_velocity < 0 ? 2 : 3)];
+			if (guard_collide(border)) {
+				guard_velocity = -guard_velocity;
+			}
 
+			if (frames == 60)
+			{
+				turn_sprites_off();
+			}
 
-
+			frames++;
 		}
+
+#pragma endregion
 
 		// this is called to draw the world
 		void draw_world(int x, int y, int w, int h) {
