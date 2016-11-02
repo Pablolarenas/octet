@@ -165,6 +165,7 @@ namespace octet {
 		bool game_over;
 		bool game_fail;
 		bool game_start;
+		bool start_the_game;
 		bool start_chasing = false;
 		bool speed_up_flag = false;
 		bool start_moving = false;
@@ -174,7 +175,7 @@ namespace octet {
 
 		// number of guards and traps (blue diamonds)
 		enum {
-			num_sound_sources=8,
+			num_sound_sources = 8,
 			easy = 30,
 			medium = 50,
 			hard = 10,
@@ -195,6 +196,7 @@ namespace octet {
 
 		ALuint get_sound_source() { return sources[cur_source++ % num_sound_sources]; }
 		
+		
 		int num_sprites;
 		int thief_sprite_index;
 		int first_guard_sprite_index;
@@ -203,28 +205,11 @@ namespace octet {
 		int win_sprite_index;
 		int lose_sprite_index;
 		int first_border_index;
-		int r1, r2;
-		int current_sprite=1;
+		int start_button_index;
 
-
-// GLunits 
 
 		GLuint empty_trap;
 		GLuint trap;
-		GLuint background;
-		GLuint thief;
-		GLuint guard;
-		GLuint diamond;
-		GLuint GameOver;
-		GLuint GameFail;
-		GLuint borde_hor;
-		GLuint borde_vert;
-		GLuint start_button_monito_lindo;
-
-		//sprite
-		sprite start_button;
-		sprite thief_sprite;
-
 		int frames = 0;
 		
 		// random number generator
@@ -249,114 +234,48 @@ namespace octet {
 
 			// left and right arrows
 			if (is_key_down(key_left)) {
-				thief_sprite.translate(-ship_speed, 0);
-				if (thief_sprite.collides_with(sprites[first_border_index + 2])) {
-					thief_sprite.translate(+ship_speed, 0);
+				sprites[thief_sprite_index].translate(-ship_speed, 0);	
+				if (sprites[thief_sprite_index].collides_with(sprites[first_border_index + 2])) {
+					sprites[thief_sprite_index].translate(+ship_speed, 0);
 				}
 			}
 			else if (is_key_down(key_right)) {
-				thief_sprite.translate(+ship_speed, 0);
-				if (thief_sprite.collides_with(sprites[first_border_index + 3])) {
-					thief_sprite.translate(-ship_speed, 0);
+				sprites[thief_sprite_index].translate(+ship_speed, 0);
+				if (sprites[thief_sprite_index].collides_with(sprites[first_border_index + 3])) {
+					sprites[thief_sprite_index].translate(-ship_speed, 0);
 				}
 			}
 			else if (is_key_down(key_up)) {
-				thief_sprite.translate(0, +ship_speed);
-				if (thief_sprite.collides_with(sprites[first_border_index + 1])) {
-					thief_sprite.translate(0,-ship_speed);
+				sprites[thief_sprite_index].translate(0, +ship_speed);
+				if (sprites[thief_sprite_index].collides_with(sprites[first_border_index + 1])) {
+					sprites[thief_sprite_index].translate(0,-ship_speed);
 				}
 			}
 			else if (is_key_down(key_down)) {
-				thief_sprite.translate(0, -ship_speed);
-				if (thief_sprite.collides_with(sprites[first_border_index])) {
-					thief_sprite.translate(0,+ship_speed);
+				sprites[thief_sprite_index].translate(0, -ship_speed);
+				if (sprites[thief_sprite_index].collides_with(sprites[first_border_index])) {
+					sprites[thief_sprite_index].translate(0,+ship_speed);
 				}
 			}
 			
-		}
-
-		// use the keyboard to move the thief
-		void move_thief_intro() {
-			const float ship_speed = 0.3f;
-
-			// left and right arrows
-			if (is_key_down(key_left)) {
-				thief_sprite.translate(-ship_speed, 0);
-			}
-			else if (is_key_down(key_right)) {
-				thief_sprite.translate(+ship_speed, 0);
-			}
-			else if (is_key_down(key_up)) {
-				thief_sprite.translate(0, +ship_speed);
-			}
-			else if (is_key_down(key_down)) {
-				thief_sprite.translate(0, -ship_speed);
-			}
-
-		}
-
-		void go() {
-			if (thief_sprite.collides_with(start_button)) {
-				thief_sprite.translate(r1 = rand() % 18 - 9, r2 = 9);
-				thief_sprite.init(thief, r1, r2, 1, 1);
-				start_game();
-				game_start = true;
-			}
-		}
-		
-		void start_game() {
-			
-			current_sprite = 1;
-	
-			sprites[0].init(background, 0, 0, 20, 20);
-			
-			first_trap_sprite_index = current_sprite;
-			for (int j = 0; j<num_trap; j++) {
-				int r1 = rand() % 19 - 9,
-					r2 = rand() % 16 - 8;
-				sprites[current_sprite++].init(trap, r1, r2, 1.5, 1.5);
-			}
-
-			first_guard_sprite_index = current_sprite;
-			int guard_position[9] = {
-				0,4,
-				4,7,
-				-2,-4,
-				-4,-8
-			};
-			int index = 0;
-			for (int j = 0; j<num_guards; j++) {
-				sprites[current_sprite++].init(guard, guard_position[index], guard_position[index + 1], 1, 1);
-				index += 2;
-			}
-
-			first_diamond_sprite_index = current_sprite;
-			r1 = rand() % 19 - 9;
-			r2 = -9;
-			sprites[current_sprite++].init(diamond, r1, r2, 1, 1);
-
-
-			win_sprite_index = current_sprite;
-			sprites[current_sprite++].init(GameOver, 20, 0, 3, 1);
-
-			lose_sprite_index = current_sprite;
-			sprites[current_sprite++].init(GameFail, 20, 0, 3, 1);
-
-			first_border_index = current_sprite;
-			sprites[current_sprite++].init(borde_hor, 0, -10, 20, 1);
-			sprites[current_sprite++].init(borde_hor, 0, 10, 20, 1);
-			sprites[current_sprite++].init(borde_vert, -10, 0, 1, 20);
-			sprites[current_sprite++].init(borde_vert, 10, 0, 1, 20);
-
-			num_sprites = current_sprite;
-
 		}
 
 		void critical_interactions () {
 
-			// if our thief collides with the true diamond! 
+			// for start the game
+	
+					game_start = sprites[thief_sprite_index].check_collision(sprites[start_button_index]);
+					if (game_start)
+					{
+						printf("you win!");
+						sprites[win_sprite_index].translate(-20, 0);
+						return;
+					}
+	
 
-				game_over= thief_sprite.check_collision(sprites[first_diamond_sprite_index]);
+			// if our thief collides with the true diamond! 
+			for (int j = 0; j < num_diamond; j++) {
+				game_over= sprites[thief_sprite_index].check_collision(sprites[first_diamond_sprite_index + j]);
 				if (game_over)
 				{
 					printf("you win!");
@@ -364,22 +283,23 @@ namespace octet {
 					return;
 				}
 				
-	
+			}
+
 
 			// if our thief collides with a false diamond, a trap!! 
 			if (!start_chasing) {
 				for (int j = 0; j < num_trap; j++)
 				{
-					start_chasing = thief_sprite.check_collision(sprites[first_trap_sprite_index + j]);
+					start_chasing = sprites[thief_sprite_index].check_collision(sprites[first_trap_sprite_index + j]);
 					if (start_chasing)
 						break;
 				}
 			}
 
-			//speed up for each trap
+			//speed up and sound for each trap
 			for (int j = 0; j < num_trap; j++)
 			{
-				speed_up_flag = thief_sprite.check_collision(sprites[first_trap_sprite_index + j]);
+				speed_up_flag = sprites[thief_sprite_index].check_collision(sprites[first_trap_sprite_index + j]);
 				if (speed_up_flag)
 				{
 					ALuint source = get_sound_source();
@@ -391,7 +311,7 @@ namespace octet {
 
 			// if our thief collides with a guard 
 			for (int j = 0; j < num_guards; j++) {
-				game_fail = thief_sprite.check_collision(sprites[first_guard_sprite_index + j]);
+				game_fail = sprites[thief_sprite_index].check_collision(sprites[first_guard_sprite_index + j]);
 				if (game_fail)
 				{
 					printf("you lose");
@@ -427,9 +347,9 @@ namespace octet {
 			for (int j = 0; j < num_guards; j++) {
 				float movement_x = set_speed_guard;
 				float movement_y = set_speed_guard;
-				if (thief_sprite.x < sprites[first_guard_sprite_index+j].x)
+				if (sprites[thief_sprite_index].x < sprites[first_guard_sprite_index+j].x)
 					movement_x = movement_x * -1;
-				if (thief_sprite.y < sprites[first_guard_sprite_index+j].y)
+				if (sprites[thief_sprite_index].y < sprites[first_guard_sprite_index+j].y)
 					movement_y = movement_y * -1;
 				sprites[first_guard_sprite_index+j].translate(movement_x, movement_y);
 			}
@@ -472,6 +392,8 @@ namespace octet {
 			for (int j = 0; j < num_trap; j++) {
 				sprites[first_trap_sprite_index + j].change_sprite(empty_trap);
 			}
+
+
 			GLuint background = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/background_dark.gif");
 			sprites[0].init(background, 0, 0, 20, 20);
 
@@ -479,6 +401,76 @@ namespace octet {
 			alSourcei(source, AL_BUFFER, door);
 			alSourcePlay(source);
 		}
+
+		void start_the_game() {
+			
+			int current_sprite = 1;
+			srand(time(NULL));
+
+			GLuint background = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/background.gif");
+			sprites[0].init(background, 0, 0, 20, 20);
+
+			empty_trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/empty.gif");
+			trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/trap.gif");
+			first_trap_sprite_index = current_sprite;
+			for (int j = 0; j<num_trap; j++) {
+				int r1 = rand() % 19 - 9,
+					r2 = rand() % 16 - 8;
+				sprites[current_sprite++].init(trap, r1, r2, 1.5, 1.5);
+			}
+
+			GLuint guard = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/guard.gif");
+			first_guard_sprite_index = current_sprite;
+			int guard_position[9] = {
+				0,4,
+				4,7,
+				-2,-4,
+				-4,-8
+			};
+			int index = 0;
+			for (int j = 0; j<num_guards; j++) {
+				sprites[current_sprite++].init(guard, guard_position[index], guard_position[index + 1], 1, 1);
+				index += 2;
+			}
+
+			GLuint diamond = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/diamond.gif");
+			first_diamond_sprite_index = current_sprite;
+			for (int j = 0; j < num_diamond; j++) {
+				int r1 = rand() % 19 - 9,
+					r2 = rand() % -9;
+				sprites[current_sprite++].init(diamond, r1, r2, 1, 1);
+			}
+
+			GLuint GameOver = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/win.gif");
+			win_sprite_index = current_sprite;
+			sprites[current_sprite++].init(GameOver, 20, 0, 3, 1);
+
+			GLuint GameFail = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/lose.gif");
+			lose_sprite_index = current_sprite;
+			sprites[current_sprite++].init(GameFail, 20, 0, 3, 1);
+
+			// set the border to white for clarity
+			GLuint white = resource_dict::get_texture_handle(GL_RGB, "assets/diamonds/brick2.gif");
+			first_border_index = current_sprite;
+			sprites[current_sprite++].init(white, 0, -10, 20, 1);
+			sprites[current_sprite++].init(white, 0, 10, 20, 1);
+			white = resource_dict::get_texture_handle(GL_RGB, "assets/diamonds/brick.gif");
+			sprites[current_sprite++].init(white, -10, 0, 1, 20);
+			sprites[current_sprite++].init(white, 10, 0, 1, 20);
+
+			// sounds
+			door = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/diamonds/door.wav");
+			bang = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/invaderers/bang.wav");
+
+			cur_source = 0;
+			alGenSources(num_sound_sources, sources);
+
+			num_sprites = current_sprite;
+
+			guard_velocity = 0.05f;
+
+			}
+
 
 #pragma endregion
 #pragma region MAIN GAME
@@ -493,101 +485,74 @@ namespace octet {
 			// set up the shader
 			texture_shader_.init();
 
-			srand(time(NULL));
-
 			// set up the matrices with a camera 5 units from the origin
 			cameraToWorld.loadIdentity();
 			cameraToWorld.translate(0, 0, 10);
-
-			//generate the menu
-			start_button_monito_lindo = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/start.gif");
-			start_button.init(start_button_monito_lindo, 0, 0, 2, 1);
-			//
 
 			font_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/big_0.gif");
 			//load all ship textures
 			
 			//file_reader::set_up_totals(num_guards,num_trap,num_diamond);
 
-			background = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/background.gif");
-	
-			thief = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief.gif");
-			r1 = rand() % 18 - 9, r2 = 9;
-			thief_sprite.init(thief, r1, r2, 1, 1);
+			int current_sprite = 1;
 
-			empty_trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/empty.gif");
-			trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/trap.gif");
-
-			guard = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/guard.gif");
-
-			diamond = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/diamond.gif");
-
-			GameOver = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/win.gif");
-
-			GameFail = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/lose.gif");
-
-			borde_hor = resource_dict::get_texture_handle(GL_RGB, "assets/diamonds/brick2.gif");
-
-			borde_vert = resource_dict::get_texture_handle(GL_RGB, "assets/diamonds/brick.gif");
-
-			// sounds
-			door = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/diamonds/door.wav");
-			bang = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/invaderers/bang.wav");
-			cur_source = 0;
-			alGenSources(num_sound_sources, sources);
-
-			guard_velocity = 0.05f;
+			GLuint start_button = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/start.gif");
+			start_button_index = current_sprite;
+			sprites[current_sprite++].init(start_button, -6,8, 1, 1);
+			
+			GLuint thief = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief.gif");
+			thief_sprite_index = current_sprite;
+				int r1 = rand() % 18 - 9,
+					r2 = 9;
+				sprites[current_sprite++].init(thief, r1, r2, 1, 1);
 
 			game_start = false;
 			game_over = false;
 			game_fail = false;
-
 		}
 
 		// called every frame to move things
 		void simulate() {
-			 if (game_over) {
+			
+			if (game_start) {
+				start_the_game();
+			}
+
+			if (game_over) {
 				return;
 			}
 
 			 if (game_fail) {
 				 return;
 			 }
-			
-			 if (game_start) {
-
+			 if (start_moving) {
 				 move_thief();
-
-				 critical_interactions();
-
-				 if (start_chasing) {
-					 chasing();
-				 }
-				 else
-				 {
-					 move_guard(guard_velocity, 0);
-				 }
-
-				 sprite &border = sprites[first_border_index + (guard_velocity < 0 ? 2 : 3)];
-				 if (guard_collide(border)) {
-					 guard_velocity = -guard_velocity;
-				 }
-
-				 if (frames == 60)
-				 {
-					 turn_sprites_off();
-					 start_moving = true;
-				 }
-
-				 frames++;
-			 }
-
-			 else
-			 {
-				 move_thief_intro();
-				 go();
-			 }
+			}
 			
+			critical_interactions();
+
+			if (start_chasing) {
+				chasing();
+			}
+			else
+			{
+				move_guard(guard_velocity, 0);
+			}
+
+			sprite &border = sprites[first_border_index + (guard_velocity < 0 ? 2 : 3)];
+			if (guard_collide(border)) {
+				guard_velocity = -guard_velocity;
+			}
+
+			if (frames == 60)
+			{
+				turn_sprites_off();
+				start_moving = true;
+			}
+
+			frames++;
+
+
 		}
 
 #pragma endregion
@@ -614,9 +579,6 @@ namespace octet {
 			for (int i = 0; i < num_sprites; ++i) {
 				sprites[i].render(texture_shader_, cameraToWorld);
 			}
-
-			start_button.render(texture_shader_, cameraToWorld);
-			thief_sprite.render(texture_shader_, cameraToWorld);
 
 			//char score_text[32];
 			//sprintf(score_text, "score: %d   lives: %d\n", score, num_lives);
