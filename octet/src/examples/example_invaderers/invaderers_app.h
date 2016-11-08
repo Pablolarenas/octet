@@ -169,13 +169,14 @@ namespace octet {
 		bool speed_up_flag = false;
 		bool start_moving = false;
 		bool show_about_text = false;
+		bool chasing_music = true;
 			
 		// big array of sprites
 		sprite sprites[500];
 
 		// number of guards and traps (blue diamonds)
 		enum {
-			num_sound_sources=8,
+			num_sound_sources=20,
 			easy = 30,
 			medium = 50,
 			hard = 10,
@@ -188,7 +189,13 @@ namespace octet {
 		// sounds
 		ALuint door;
 		ALuint bang;
+		ALuint menu_music;
+		ALuint chase_music;
+		ALuint chase_music_file;
 		unsigned cur_source;
+		ALuint audio_inicio;
+		ALuint win_sound_file;
+		ALuint win_sound;
 		ALuint sources[num_sound_sources];
 
 		// speed of enemy
@@ -233,7 +240,7 @@ namespace octet {
 		sprite about_button;
 
 		int frames = 0;
-		float speed[4]{0.3f,-0.3f,0.3f,0.3f};
+		float speed[4]{0.06f,-0.06f,0.06f,0.06f};
 		
 		// random number generator
 		class random randomizer;
@@ -244,7 +251,7 @@ namespace octet {
 		// information for our text
 		bitmap_font font;
 
-		float set_speed_guard = 0.02f;
+		float set_speed_guard = 0.06f;
 
 		//ALuint get_sound_source() { return sources[cur_source++ % num_sound_sources]; }
 
@@ -258,24 +265,28 @@ namespace octet {
 			// left and right arrows
 			if (is_key_down(key_left)) {
 				thief_sprite.translate(-ship_speed, 0);
+				thief_sprite.change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_i.gif"));
 				if (thief_sprite.collides_with(sprites[first_border_index + 2])) {
 					thief_sprite.translate(+ship_speed, 0);
 				}
 			}
 			else if (is_key_down(key_right)) {
 				thief_sprite.translate(+ship_speed, 0);
+				thief_sprite.change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_d.gif"));
 				if (thief_sprite.collides_with(sprites[first_border_index + 3])) {
 					thief_sprite.translate(-ship_speed, 0);
 				}
 			}
 			else if (is_key_down(key_up)) {
 				thief_sprite.translate(0, +ship_speed);
+				thief_sprite.change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_arr.gif"));
 				if (thief_sprite.collides_with(sprites[first_border_index + 1])) {
 					thief_sprite.translate(0,-ship_speed);
 				}
 			}
 			else if (is_key_down(key_down)) {
 				thief_sprite.translate(0, -ship_speed);
+				thief_sprite.change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_ab.gif"));
 				if (thief_sprite.collides_with(sprites[first_border_index])) {
 					thief_sprite.translate(0,+ship_speed);
 				}
@@ -290,15 +301,19 @@ namespace octet {
 			// left and right arrows
 			if (is_key_down(key_left)) {
 				thief_sprite.translate(-ship_speed, 0);
+				thief_sprite.change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_i.gif"));
 			}
 			else if (is_key_down(key_right)) {
 				thief_sprite.translate(+ship_speed, 0);
+				thief_sprite.change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_d.gif"));
 			}
 			else if (is_key_down(key_up)) {
 				thief_sprite.translate(0, +ship_speed);
+				thief_sprite.change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_arr.gif"));
 			}
 			else if (is_key_down(key_down)) {
 				thief_sprite.translate(0, -ship_speed);
+				thief_sprite.change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_ab.gif"));
 			}
 
 		}
@@ -322,7 +337,8 @@ namespace octet {
 			for (int j = 0; j<num_trap; j++) {
 				int r1 = rand() % 19 - 9,
 					r2 = rand() % 16 - 8;
-				sprites[current_sprite++].init(trap, r1, r2, 1.5, 1.5);
+				
+				sprites[current_sprite++].init(trap, r1, r2, 1.0, 1.0);
 			}
 
 			first_guard_sprite_index = current_sprite;
@@ -373,6 +389,14 @@ namespace octet {
 				{
 					printf("you win!");
 					sprites[win_sprite_index].translate(-20, 0);
+
+					alSourcePause(chase_music);
+					alSourcePause(audio_inicio);
+
+					win_sound = get_sound_source();
+					alSourcei(win_sound, AL_BUFFER, win_sound_file);
+					alSourcePlay(win_sound);
+
 					return;
 				}
 				
@@ -386,6 +410,7 @@ namespace octet {
 					if (start_chasing)
 						break;
 				}
+
 			}
 
 			//speed up for each trap
@@ -394,10 +419,7 @@ namespace octet {
 				speed_up_flag = thief_sprite.check_collision(sprites[first_trap_sprite_index + j]);
 				if (speed_up_flag)
 				{
-					ALuint source = get_sound_source();
-					alSourcei(source, AL_BUFFER, bang);
-					alSourcePlay(source);
-					set_speed_guard += 0.005;
+					set_speed_guard += 0.001;
 				}
 			}
 
@@ -491,6 +513,19 @@ namespace octet {
 
 		}
 
+		void switch_sounds() {
+			if (chasing_music) {
+
+				alSourcePause(audio_inicio);
+
+				chase_music = get_sound_source();
+				alSourcei(chase_music, AL_BUFFER, chase_music_file);
+				alSourcePlay(chase_music);
+				chasing_music = false;
+			}
+		}
+		
+
 #pragma endregion
 #pragma region MAIN GAME
 	public:
@@ -531,11 +566,11 @@ namespace octet {
 
 			background = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/background.gif");
 	
-			thief = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief.gif");
+			thief = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_ab.gif");
 			//r1 = rand() % 18 - 9, r2 = 9;
 			thief_sprite.init(thief, 0, 0, 1, 1);
 
-			empty_trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/empty.gif");
+			empty_trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/empty.tga");
 			trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/trap.gif");
 
 			guard = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/guard.gif");
@@ -552,9 +587,15 @@ namespace octet {
 
 			// sounds
 			door = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/diamonds/door.wav");
-			bang = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/invaderers/bang.wav");
+			menu_music = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/diamonds/castle.wav");
+			chase_music_file = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/diamonds/chase.wav");
+			win_sound_file= resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/diamonds/win.wav");
 			cur_source = 0;
 			alGenSources(num_sound_sources, sources);
+
+			audio_inicio = get_sound_source();
+			alSourcei(audio_inicio, AL_BUFFER, menu_music);
+			alSourcePlay(audio_inicio);
 
 			guard_velocity = 0.05f;
 
@@ -589,6 +630,7 @@ namespace octet {
 
 				 if (start_chasing) {
 					 chasing();
+					 switch_sounds();
 				 }
 				 else
 				 {
