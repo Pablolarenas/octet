@@ -168,7 +168,8 @@ namespace octet {
 		bool start_chasing = false;
 		bool speed_up_flag = false;
 		bool start_moving = false;
-
+		bool show_about_text = false;
+			
 		// big array of sprites
 		sprite sprites[500];
 
@@ -220,12 +221,19 @@ namespace octet {
 		GLuint borde_hor;
 		GLuint borde_vert;
 		GLuint start_button_monito_lindo;
+		GLuint logo_glunit;
+		GLuint about_glunit;
+		GLuint about_button_glunit;
 
 		//sprite
 		sprite start_button;
 		sprite thief_sprite;
+		sprite logo;
+		sprite about;
+		sprite about_button;
 
 		int frames = 0;
+		float speed[4]{0.3f,-0.3f,0.3f,0.3f};
 		
 		// random number generator
 		class random randomizer;
@@ -350,6 +358,10 @@ namespace octet {
 
 			num_sprites = current_sprite;
 
+			logo.translate(-100, 0);
+			about.translate(-100, 0);
+			start_button.translate(-100, 0);
+			about_button.translate(-100, 0);
 		}
 
 		void critical_interactions () {
@@ -406,21 +418,19 @@ namespace octet {
 		void move_guard(float dx, float dy) {
 			for (int j = 0; j != num_guards; ++j) {
 				sprite &guard = sprites[first_guard_sprite_index+j];
-				guard.translate(dx, dy);
+				guard.translate(speed[j], dy);
 
 			}
 		}
 
-		bool guard_collide(sprite &border) {
+		void guard_collide(sprite &border_i, sprite &border_d) {
 			for (int j = 0; j != num_guards; ++j) {
 				sprite &guard = sprites[first_guard_sprite_index + j];
-				if (guard.collides_with(border)) {
-					return true;
+				if (guard.collides_with(border_i) || guard.collides_with(border_d)) {
+					speed[j] = speed[j] * -1;
 				}
 			}
-			return false;
 		}
-
 
 		// how guards move in a chasing
 		void chasing() {
@@ -478,6 +488,7 @@ namespace octet {
 			ALuint source = get_sound_source();
 			alSourcei(source, AL_BUFFER, door);
 			alSourcePlay(source);
+
 		}
 
 #pragma endregion
@@ -501,7 +512,16 @@ namespace octet {
 
 			//generate the menu
 			start_button_monito_lindo = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/start.gif");
-			start_button.init(start_button_monito_lindo, 0, 0, 2, 1);
+			start_button.init(start_button_monito_lindo, 8, -8, 2, 1);
+
+			about_button_glunit=resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/start.gif");
+			about_button.init(about_button_glunit, -8, -8, 2, 1);
+
+			about_glunit = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/text.gif");
+			about.init(about_glunit, 50, 0, 20, 20);
+
+			logo_glunit = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/logo.gif");
+			logo.init(logo_glunit, 0, 0, 20, 20);
 			//
 
 			font_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/big_0.gif");
@@ -512,8 +532,8 @@ namespace octet {
 			background = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/background.gif");
 	
 			thief = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief.gif");
-			r1 = rand() % 18 - 9, r2 = 9;
-			thief_sprite.init(thief, r1, r2, 1, 1);
+			//r1 = rand() % 18 - 9, r2 = 9;
+			thief_sprite.init(thief, 0, 0, 1, 1);
 
 			empty_trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/empty.gif");
 			trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/trap.gif");
@@ -553,9 +573,16 @@ namespace octet {
 			 if (game_fail) {
 				 return;
 			 }
+
+			 if (!show_about_text && thief_sprite.check_collision(about_button)) {
+				 about.translate(-50, 0);
+				 show_about_text = true;
+			  }
+
 			
 			 if (game_start) {
 
+				 if (start_moving)
 				 move_thief();
 
 				 critical_interactions();
@@ -565,13 +592,11 @@ namespace octet {
 				 }
 				 else
 				 {
-					 move_guard(guard_velocity, 0);
+					 move_guard(0, 0);
 				 }
 
-				 sprite &border = sprites[first_border_index + (guard_velocity < 0 ? 2 : 3)];
-				 if (guard_collide(border)) {
-					 guard_velocity = -guard_velocity;
-				 }
+				 guard_collide(sprites[first_border_index + 2], sprites[first_border_index + 3]);
+
 
 				 if (frames == 60)
 				 {
@@ -617,6 +642,9 @@ namespace octet {
 
 			start_button.render(texture_shader_, cameraToWorld);
 			thief_sprite.render(texture_shader_, cameraToWorld);
+			logo.render(texture_shader_, cameraToWorld);
+			about.render(texture_shader_, cameraToWorld);
+			about_button.render(texture_shader_, cameraToWorld);
 
 			//char score_text[32];
 			//sprintf(score_text, "score: %d   lives: %d\n", score, num_lives);
