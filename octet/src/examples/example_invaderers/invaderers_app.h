@@ -179,9 +179,9 @@ namespace octet {
 			num_sound_sources=20,
 			easy = 30,
 			medium = 50,
-			hard = 10,
-			num_guards = 4,
-			num_trap = medium,
+			hard = 80,
+			num_guards = 8,
+			num_trap = hard,
 			num_diamond = 1,
 			num_borders = 4,
 		};
@@ -240,7 +240,7 @@ namespace octet {
 		sprite about_button;
 
 		int frames = 0;
-		float speed[4]{0.06f,-0.06f,0.06f,0.06f};
+		float speed[8]{0.06f,-0.06f,0.06f,0.06f,0.06f,-0.06f,0.06f,0.06f };
 		
 		// random number generator
 		class random randomizer;
@@ -342,11 +342,15 @@ namespace octet {
 			}
 
 			first_guard_sprite_index = current_sprite;
-			int guard_position[9] = {
+			int guard_position[16] = {
 				0,4,
 				4,7,
 				-2,-4,
-				-4,-8
+				-4,-8,
+				0,2,
+				6,3,
+				-3,-5,
+				-5,-9
 			};
 			int index = 0;
 			for (int j = 0; j<num_guards; j++) {
@@ -361,10 +365,10 @@ namespace octet {
 
 
 			win_sprite_index = current_sprite;
-			sprites[current_sprite++].init(GameOver, 20, 0, 3, 1);
+			sprites[current_sprite++].init(GameOver, 20, 0, 6, 2);
 
 			lose_sprite_index = current_sprite;
-			sprites[current_sprite++].init(GameFail, 20, 0, 3, 1);
+			sprites[current_sprite++].init(GameFail, 20, 0, 6, 2);
 
 			first_border_index = current_sprite;
 			sprites[current_sprite++].init(borde_hor, 0, -10, 20, 1);
@@ -464,6 +468,7 @@ namespace octet {
 				if (thief_sprite.y < sprites[first_guard_sprite_index+j].y)
 					movement_y = movement_y * -1;
 				sprites[first_guard_sprite_index+j].translate(movement_x, movement_y);
+				sprites[first_guard_sprite_index + j].change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/guard2.gif"));
 			}
 		}
 
@@ -547,10 +552,10 @@ namespace octet {
 
 			//generate the menu
 			start_button_monito_lindo = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/start.gif");
-			start_button.init(start_button_monito_lindo, 8, -8, 2, 1);
+			start_button.init(start_button_monito_lindo, 7, -8, 4, 2);
 
-			about_button_glunit=resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/start.gif");
-			about_button.init(about_button_glunit, -8, -8, 2, 1);
+			about_button_glunit=resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/about.gif");
+			about_button.init(about_button_glunit, -7, -8, 4, 2);
 
 			about_glunit = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/text.gif");
 			about.init(about_glunit, 50, 0, 20, 20);
@@ -568,9 +573,9 @@ namespace octet {
 	
 			thief = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_ab.gif");
 			//r1 = rand() % 18 - 9, r2 = 9;
-			thief_sprite.init(thief, 0, 0, 1, 1);
+			thief_sprite.init(thief, 0, 0, 2, 2);
 
-			empty_trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/empty.tga");
+			empty_trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/empty.gif");
 			trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/trap.gif");
 
 			guard = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/guard.gif");
