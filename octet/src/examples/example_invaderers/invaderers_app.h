@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-// (C) Andy Thomason 2012-2014
+// Pablo Larenas Henriquez 2016
 //
 // Modular Framework for OpenGLES2 rendering on multiple platforms.
 //
@@ -161,12 +161,12 @@ namespace octet {
 		// shader to draw a textured triangle
 		texture_shader texture_shader_;
 
-		// game state
-		bool game_over;
-		bool game_fail;
+		// Booleans
+		bool win_game;
+		bool fail_game;
 		bool game_start;
 		bool start_chasing = false;
-		bool speed_up_flag = false;
+		bool increase_skull_speed = false;
 		bool start_moving = false;
 		bool show_about_text = false;
 		bool chasing_music = true;
@@ -174,38 +174,39 @@ namespace octet {
 		// big array of sprites
 		sprite sprites[500];
 
-		// number of guards and traps (blue diamonds)
+		// number of skulls, traps, diamonds and borders
 		enum {
 			num_sound_sources=20,
 			easy = 30,
 			medium = 50,
-			hard = 80,
-			num_guards = 8,
+			hard = 100,
+			num_skull = 8,
 			num_trap = hard,
 			num_diamond = 1,
 			num_borders = 4,
 		};
 
-		// sounds
+		// all sounds of the game
 		ALuint door;
-		ALuint bang;
-		ALuint menu_music;
 		ALuint chase_music;
 		ALuint chase_music_file;
-		unsigned cur_source;
-		ALuint audio_inicio;
-		ALuint win_sound_file;
+		ALuint dungeon_music;
+		ALuint dungeon_music_file;
 		ALuint win_sound;
+		ALuint win_sound_file;
+		ALuint lose_sound;
+		ALuint lose_sound_file;
 		ALuint sources[num_sound_sources];
+		unsigned cur_source;
 
 		// speed of enemy
-		float guard_velocity;
+		float skull_velocity;
 
 		ALuint get_sound_source() { return sources[cur_source++ % num_sound_sources]; }
 		
+		// initializing our elements
 		int num_sprites;
-		int thief_sprite_index;
-		int first_guard_sprite_index;
+		int first_skull_sprite_index;
 		int first_trap_sprite_index;
 		int first_diamond_sprite_index;
 		int win_sprite_index;
@@ -214,25 +215,24 @@ namespace octet {
 		int r1, r2;
 		int current_sprite=1;
 
-
-// GLunits 
+		// GLunits or textures
 
 		GLuint empty_trap;
 		GLuint trap;
 		GLuint background;
 		GLuint thief;
-		GLuint guard;
+		GLuint skull;
 		GLuint diamond;
-		GLuint GameOver;
-		GLuint GameFail;
-		GLuint borde_hor;
+		GLuint game_over_GLuint;
+		GLuint game_fail_GLuint;
+		GLuint borde_hor_GLuint;
 		GLuint borde_vert;
-		GLuint start_button_monito_lindo;
-		GLuint logo_glunit;
-		GLuint about_glunit;
-		GLuint about_button_glunit;
+		GLuint start_button_GLuint;
+		GLuint logo_GLuint;
+		GLuint about_GLuint;
+		GLuint about_button_GLuint;
 
-		//sprite
+		//sprites, I created more sprites to have an easiest control of the elements during the code
 		sprite start_button;
 		sprite thief_sprite;
 		sprite logo;
@@ -251,88 +251,89 @@ namespace octet {
 		// information for our text
 		bitmap_font font;
 
-		float set_speed_guard = 0.06f;
+		float set_speed_skull = 0.06f;
 
 		//ALuint get_sound_source() { return sources[cur_source++ % num_sound_sources]; }
 
 #pragma endregion
 #pragma region FUNCTIONS
 
-		// use the keyboard to move the thief
+		// use the keyboard to move the thief in the dungenon 
 		void move_thief() {
-			const float ship_speed = 0.3f;
+			const float thief_speed = 0.16f;
 
-			// left and right arrows
+			// left, right, up and down arrows with their respective colliders and sprite changes
 			if (is_key_down(key_left)) {
-				thief_sprite.translate(-ship_speed, 0);
+				thief_sprite.translate(-thief_speed, 0);
 				thief_sprite.change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_i.gif"));
 				if (thief_sprite.collides_with(sprites[first_border_index + 2])) {
-					thief_sprite.translate(+ship_speed, 0);
+					thief_sprite.translate(+thief_speed, 0);
 				}
 			}
 			else if (is_key_down(key_right)) {
-				thief_sprite.translate(+ship_speed, 0);
+				thief_sprite.translate(+thief_speed, 0);
 				thief_sprite.change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_d.gif"));
 				if (thief_sprite.collides_with(sprites[first_border_index + 3])) {
-					thief_sprite.translate(-ship_speed, 0);
+					thief_sprite.translate(-thief_speed, 0);
 				}
 			}
 			else if (is_key_down(key_up)) {
-				thief_sprite.translate(0, +ship_speed);
+				thief_sprite.translate(0, +thief_speed);
 				thief_sprite.change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_arr.gif"));
 				if (thief_sprite.collides_with(sprites[first_border_index + 1])) {
-					thief_sprite.translate(0,-ship_speed);
+					thief_sprite.translate(0,-thief_speed);
 				}
 			}
 			else if (is_key_down(key_down)) {
-				thief_sprite.translate(0, -ship_speed);
+				thief_sprite.translate(0, -thief_speed);
 				thief_sprite.change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_ab.gif"));
 				if (thief_sprite.collides_with(sprites[first_border_index])) {
-					thief_sprite.translate(0,+ship_speed);
+					thief_sprite.translate(0,+thief_speed);
 				}
-			}
-			
+			}			
 		}
 
-		// use the keyboard to move the thief
+		// use the keyboard to move the thief in the in game menu 
 		void move_thief_intro() {
-			const float ship_speed = 0.3f;
+			const float thief_speed = 0.3f;
 
-			// left and right arrows
+			// left, right, up and down arrows with their respective sprite changes No collides are used in the main menu
 			if (is_key_down(key_left)) {
-				thief_sprite.translate(-ship_speed, 0);
+				thief_sprite.translate(-thief_speed, 0);
 				thief_sprite.change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_i.gif"));
 			}
 			else if (is_key_down(key_right)) {
-				thief_sprite.translate(+ship_speed, 0);
+				thief_sprite.translate(+thief_speed, 0);
 				thief_sprite.change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_d.gif"));
 			}
 			else if (is_key_down(key_up)) {
-				thief_sprite.translate(0, +ship_speed);
+				thief_sprite.translate(0, +thief_speed);
 				thief_sprite.change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_arr.gif"));
 			}
 			else if (is_key_down(key_down)) {
-				thief_sprite.translate(0, -ship_speed);
+				thief_sprite.translate(0, -thief_speed);
 				thief_sprite.change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/thief_ab.gif"));
 			}
-
 		}
 
-		void go() {
+		// function to iniciate the game once the thief collides with the start button 
+		void move_thief_to_dungeon() {
 			if (thief_sprite.collides_with(start_button)) {
 				thief_sprite.translate(r1 = rand() % 18 - 9, r2 = 9);
-				thief_sprite.init(thief, r1, r2, 1, 1);
-				start_game();
+				thief_sprite.init(thief, r1, r2, 0.8f, 0.8f);
+				load_game();
 				game_start = true;
 			}
 		}
 		
-		void start_game() {
+		void load_game() {
 			
 			current_sprite = 1;
-	
+
+			// load background
 			sprites[0].init(background, 0, 0, 20, 20);
-			
+
+			// load traps
 			first_trap_sprite_index = current_sprite;
 			for (int j = 0; j<num_trap; j++) {
 				int r1 = rand() % 19 - 9,
@@ -341,8 +342,9 @@ namespace octet {
 				sprites[current_sprite++].init(trap, r1, r2, 1.0, 1.0);
 			}
 
-			first_guard_sprite_index = current_sprite;
-			int guard_position[16] = {
+			// load skulls
+			first_skull_sprite_index = current_sprite;
+			int skull_position[16] = {
 				0,4,
 				4,7,
 				-2,-4,
@@ -353,31 +355,34 @@ namespace octet {
 				-5,-9
 			};
 			int index = 0;
-			for (int j = 0; j<num_guards; j++) {
-				sprites[current_sprite++].init(guard, guard_position[index], guard_position[index + 1], 1, 1);
+			for (int j = 0; j<num_skull; j++) {
+				sprites[current_sprite++].init(skull, skull_position[index], skull_position[index + 1], 1, 1);
 				index += 2;
 			}
 
+			// load diamond
 			first_diamond_sprite_index = current_sprite;
 			r1 = rand() % 19 - 9;
 			r2 = -9;
 			sprites[current_sprite++].init(diamond, r1, r2, 1, 1);
 
-
+			// load win and lose but out of the screen
 			win_sprite_index = current_sprite;
-			sprites[current_sprite++].init(GameOver, 20, 0, 6, 2);
+			sprites[current_sprite++].init(game_over_GLuint, 20, 0, 6, 2);
 
 			lose_sprite_index = current_sprite;
-			sprites[current_sprite++].init(GameFail, 20, 0, 6, 2);
+			sprites[current_sprite++].init(game_fail_GLuint, 20, 0, 6, 2);
 
+			// load borders
 			first_border_index = current_sprite;
-			sprites[current_sprite++].init(borde_hor, 0, -10, 20, 1);
-			sprites[current_sprite++].init(borde_hor, 0, 10, 20, 1);
+			sprites[current_sprite++].init(borde_hor_GLuint, 0, -10, 20, 1);
+			sprites[current_sprite++].init(borde_hor_GLuint, 0, 10, 20, 1);
 			sprites[current_sprite++].init(borde_vert, -10, 0, 1, 20);
 			sprites[current_sprite++].init(borde_vert, 10, 0, 1, 20);
 
 			num_sprites = current_sprite;
 
+			// logo, about text, about and start button move out of the screen
 			logo.translate(-100, 0);
 			about.translate(-100, 0);
 			start_button.translate(-100, 0);
@@ -386,16 +391,15 @@ namespace octet {
 
 		void critical_interactions () {
 
-			// if our thief collides with the true diamond! 
-
-				game_over= thief_sprite.check_collision(sprites[first_diamond_sprite_index]);
-				if (game_over)
+				// if our thief collides with the diamond! 
+				win_game= thief_sprite.check_collision(sprites[first_diamond_sprite_index]);
+				if (win_game)
 				{
 					printf("you win!");
 					sprites[win_sprite_index].translate(-20, 0);
 
 					alSourcePause(chase_music);
-					alSourcePause(audio_inicio);
+					alSourcePause(dungeon_music);
 
 					win_sound = get_sound_source();
 					alSourcei(win_sound, AL_BUFFER, win_sound_file);
@@ -404,9 +408,7 @@ namespace octet {
 					return;
 				}
 				
-	
-
-			// if our thief collides with a false diamond, a trap!! 
+			// if our thief collides with a trap!! 
 			if (!start_chasing) {
 				for (int j = 0; j < num_trap; j++)
 				{
@@ -417,58 +419,64 @@ namespace octet {
 
 			}
 
-			//speed up for each trap
+			//increase the speed of skulls each time our thief collides with a trap
 			for (int j = 0; j < num_trap; j++)
 			{
-				speed_up_flag = thief_sprite.check_collision(sprites[first_trap_sprite_index + j]);
-				if (speed_up_flag)
+				increase_skull_speed = thief_sprite.check_collision(sprites[first_trap_sprite_index + j]);
+				if (increase_skull_speed)
 				{
-					set_speed_guard += 0.001;
+					set_speed_skull += 0.001;
 				}
 			}
 
-			// if our thief collides with a guard 
-			for (int j = 0; j < num_guards; j++) {
-				game_fail = thief_sprite.check_collision(sprites[first_guard_sprite_index + j]);
-				if (game_fail)
+			// if our thief collides with a skull 
+			for (int j = 0; j < num_skull; j++) {
+				fail_game = thief_sprite.check_collision(sprites[first_skull_sprite_index + j]);
+				if (fail_game)
 				{
 					printf("you lose");
 					sprites[lose_sprite_index].translate(-20, 0);
+
+					alSourcePause(chase_music);
+					alSourcePause(dungeon_music);
+
+					lose_sound = get_sound_source();
+					alSourcei(lose_sound, AL_BUFFER, lose_sound_file);
+					alSourcePlay(lose_sound);
 					return;
 				}
-			
-			}
-
-		}
-
-		void move_guard(float dx, float dy) {
-			for (int j = 0; j != num_guards; ++j) {
-				sprite &guard = sprites[first_guard_sprite_index+j];
-				guard.translate(speed[j], dy);
-
 			}
 		}
 
-		void guard_collide(sprite &border_i, sprite &border_d) {
-			for (int j = 0; j != num_guards; ++j) {
-				sprite &guard = sprites[first_guard_sprite_index + j];
-				if (guard.collides_with(border_i) || guard.collides_with(border_d)) {
+		// movement of the skulls
+		void move_skull(float dx, float dy) {
+			for (int j = 0; j != num_skull; ++j) {
+				sprite &skull = sprites[first_skull_sprite_index+j];
+				skull.translate(speed[j], dy);
+			}
+		}
+
+		// when a skull collides with a border
+		void skull_collide(sprite &border_i, sprite &border_d) {
+			for (int j = 0; j != num_skull; ++j) {
+				sprite &skull = sprites[first_skull_sprite_index + j];
+				if (skull.collides_with(border_i) || skull.collides_with(border_d)) {
 					speed[j] = speed[j] * -1;
 				}
 			}
 		}
 
-		// how guards move in a chasing
+		// how skulls move in a chasing
 		void chasing() {
-			for (int j = 0; j < num_guards; j++) {
-				float movement_x = set_speed_guard;
-				float movement_y = set_speed_guard;
-				if (thief_sprite.x < sprites[first_guard_sprite_index+j].x)
+			for (int j = 0; j < num_skull; j++) {
+				float movement_x = set_speed_skull;
+				float movement_y = set_speed_skull;
+				if (thief_sprite.x < sprites[first_skull_sprite_index+j].x)
 					movement_x = movement_x * -1;
-				if (thief_sprite.y < sprites[first_guard_sprite_index+j].y)
+				if (thief_sprite.y < sprites[first_skull_sprite_index+j].y)
 					movement_y = movement_y * -1;
-				sprites[first_guard_sprite_index+j].translate(movement_x, movement_y);
-				sprites[first_guard_sprite_index + j].change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/guard2.gif"));
+				sprites[first_skull_sprite_index+j].translate(movement_x, movement_y);
+				sprites[first_skull_sprite_index + j].change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/skull2.gif"));
 			}
 		}
 
@@ -505,6 +513,7 @@ namespace octet {
 			glDrawElements(GL_TRIANGLES, num_quads * 6, GL_UNSIGNED_INT, indices);
 		}
 
+		// wen the traps are turned in hide mode at the beggining of the stage
 		void turn_sprites_off() {
 			for (int j = 0; j < num_trap; j++) {
 				sprites[first_trap_sprite_index + j].change_sprite(empty_trap);
@@ -515,13 +524,13 @@ namespace octet {
 			ALuint source = get_sound_source();
 			alSourcei(source, AL_BUFFER, door);
 			alSourcePlay(source);
-
 		}
 
+		// sound changes when our thief collides with a trap
 		void switch_sounds() {
 			if (chasing_music) {
 
-				alSourcePause(audio_inicio);
+				alSourcePause(dungeon_music);
 
 				chase_music = get_sound_source();
 				alSourcei(chase_music, AL_BUFFER, chase_music_file);
@@ -550,24 +559,22 @@ namespace octet {
 			cameraToWorld.loadIdentity();
 			cameraToWorld.translate(0, 0, 10);
 
-			//generate the menu
-			start_button_monito_lindo = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/start.gif");
-			start_button.init(start_button_monito_lindo, 7, -8, 4, 2);
+			//call menu textures
+			start_button_GLuint = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/start.gif");
+			start_button.init(start_button_GLuint, 7, -8, 4, 2);
 
-			about_button_glunit=resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/about.gif");
-			about_button.init(about_button_glunit, -7, -8, 4, 2);
+			about_button_GLuint=resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/about.gif");
+			about_button.init(about_button_GLuint, -7, -8, 4, 2);
 
-			about_glunit = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/text.gif");
-			about.init(about_glunit, 50, 0, 20, 20);
+			about_GLuint = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/text.gif");
+			about.init(about_GLuint, 50, 0, 20, 20);
 
-			logo_glunit = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/logo.gif");
-			logo.init(logo_glunit, 0, 0, 20, 20);
-			//
-
-			font_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/big_0.gif");
-			//load all ship textures
+			logo_GLuint = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/logo.gif");
+			logo.init(logo_GLuint, 0, 0, 20, 20);
 			
-			//file_reader::set_up_totals(num_guards,num_trap,num_diamond);
+			font_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/big_0.gif");
+			
+			//call background, diamond, traps, skulls, win, lose, borders, thief textures
 
 			background = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/background.gif");
 	
@@ -578,45 +585,46 @@ namespace octet {
 			empty_trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/empty.gif");
 			trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/trap.gif");
 
-			guard = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/guard.gif");
+			skull = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/skull.gif");
 
 			diamond = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/diamond.gif");
 
-			GameOver = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/win.gif");
+			game_over_GLuint = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/win.gif");
 
-			GameFail = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/lose.gif");
+			game_fail_GLuint = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/lose.gif");
 
-			borde_hor = resource_dict::get_texture_handle(GL_RGB, "assets/diamonds/brick2.gif");
+			borde_hor_GLuint = resource_dict::get_texture_handle(GL_RGB, "assets/diamonds/brick2.gif");
 
 			borde_vert = resource_dict::get_texture_handle(GL_RGB, "assets/diamonds/brick.gif");
 
 			// sounds
 			door = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/diamonds/door.wav");
-			menu_music = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/diamonds/castle.wav");
+			dungeon_music_file = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/diamonds/castle.wav");
 			chase_music_file = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/diamonds/chase.wav");
 			win_sound_file= resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/diamonds/win.wav");
+			lose_sound_file= resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/diamonds/lose.wav");
+
 			cur_source = 0;
 			alGenSources(num_sound_sources, sources);
 
-			audio_inicio = get_sound_source();
-			alSourcei(audio_inicio, AL_BUFFER, menu_music);
-			alSourcePlay(audio_inicio);
+			dungeon_music = get_sound_source();
+			alSourcei(dungeon_music, AL_BUFFER, dungeon_music_file);
+			alSourcePlay(dungeon_music);
 
-			guard_velocity = 0.05f;
+			skull_velocity = 0.05f;
 
 			game_start = false;
-			game_over = false;
-			game_fail = false;
-
+			win_game = false;
+			fail_game = false;
 		}
 
 		// called every frame to move things
 		void simulate() {
-			 if (game_over) {
+			 if (win_game) {
 				return;
 			}
 
-			 if (game_fail) {
+			 if (fail_game) {
 				 return;
 			 }
 
@@ -625,7 +633,6 @@ namespace octet {
 				 show_about_text = true;
 			  }
 
-			
 			 if (game_start) {
 
 				 if (start_moving)
@@ -639,10 +646,10 @@ namespace octet {
 				 }
 				 else
 				 {
-					 move_guard(0, 0);
+					 move_skull(0, 0);
 				 }
 
-				 guard_collide(sprites[first_border_index + 2], sprites[first_border_index + 3]);
+				 skull_collide(sprites[first_border_index + 2], sprites[first_border_index + 3]);
 
 
 				 if (frames == 60)
@@ -657,7 +664,7 @@ namespace octet {
 			 else
 			 {
 				 move_thief_intro();
-				 go();
+				 move_thief_to_dungeon();
 			 }
 			
 		}
