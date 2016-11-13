@@ -1,20 +1,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Pablo Larenas Henriquez 2016
+//  (C) Andy Thomason 2012-2014
 //
-// Modular Framework for OpenGLES2 rendering on multiple platforms.
+//  Modular Framework for OpenGLES2 rendering on multiple platforms.
+//  invaderer example: simple game with sprites and sounds
 //
-// invaderer example: simple game with sprites and sounds
-//
-// Level: 1
-//
-// Demonstrates:
-//   Basic framework app
-//   Shaders
-//   Basic Matrices
-//   Simple game mechanics
-//   Texture loaded from GIF file
-//   Audio
+//  'Sneak' game code and modifications (c) Pablo Larenas 2016.
 //
 
 #include <ctime>
@@ -170,6 +161,7 @@ namespace octet {
 		bool start_moving = false;
 		bool show_about_text = false;
 		bool chasing_music = true;
+		bool ischasing = false; 
 			
 		// big array of sprites
 		sprite sprites[500];
@@ -345,14 +337,14 @@ namespace octet {
 			// load skulls
 			first_skull_sprite_index = current_sprite;
 			int skull_position[16] = {
+				6,2,
 				0,4,
-				4,7,
-				-2,-4,
-				-4,-8,
-				0,2,
-				6,3,
-				-3,-5,
-				-5,-9
+				0,8,
+				-6,6,
+				6,-2,
+				0,-4,
+				-6,-6,
+				0,-8
 			};
 			int index = 0;
 			for (int j = 0; j<num_skull; j++) {
@@ -476,7 +468,8 @@ namespace octet {
 				if (thief_sprite.y < sprites[first_skull_sprite_index+j].y)
 					movement_y = movement_y * -1;
 				sprites[first_skull_sprite_index+j].translate(movement_x, movement_y);
-				sprites[first_skull_sprite_index + j].change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/skull2.gif"));
+				/*sprites[first_skull_sprite_index + j].change_sprite(resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/skull2.gif"));*/
+				ischasing = true;
 			}
 		}
 
@@ -583,6 +576,7 @@ namespace octet {
 			thief_sprite.init(thief, 0, 0, 2, 2);
 
 			empty_trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/empty.gif");
+
 			trap = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/trap.gif");
 
 			skull = resource_dict::get_texture_handle(GL_RGBA, "assets/diamonds/skull.gif");
@@ -691,7 +685,12 @@ namespace octet {
 
 			// draw all the sprites
 			for (int i = 0; i < num_sprites; ++i) {
-				sprites[i].render(texture_shader_, cameraToWorld);
+				if (ischasing && i >= first_skull_sprite_index && i < first_skull_sprite_index + num_skull) {
+						sprites[i].render(texture_shader_, cameraToWorld, vec4 (1,0,0,1));
+				}
+				else {
+					sprites[i].render(texture_shader_, cameraToWorld);
+				}
 			}
 
 			start_button.render(texture_shader_, cameraToWorld);
