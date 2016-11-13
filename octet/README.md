@@ -73,13 +73,14 @@ Now, I can discriminate between functions and variables, I can deduce that an er
 All textures were designed and drawn by me, using Adobe Photoshop and Adobe Illustrator, both licenced under my personal Creative Cloud Account.  
 
 **7.2 Sounds**  
-Music and sound for this demo version are extracted from other computer games as a reference  
 
 Lose  
 Composed sound in Adobe Premiere. licenced under my personal Creative Cloud Account  
 
 Door  
 Composed sound in Adobe Premiere. licenced under my personal Creative Cloud Account  
+  
+The following music and sound are extracted from other computer games just as a reference:  
 
 Win  
 Extracted and modified music from The Legend of Zelda: Link’s Awakening.  
