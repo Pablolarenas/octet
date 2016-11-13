@@ -10,19 +10,26 @@ As a graphic designer, my foundations in code were minimum at the start of this 
 To face this assignment (create a new 2d game from invaders example) I started from the place I had some experience: concept and idea of the game, plus some initial mechanics. Defining this in the first place was a useful approach to create a mind map of what kind of things I needed to learn to create the game in a successful way. The benefit of working through a design pathway was that I could organize my workflow in an early stage instead of improvising erratically all the time and get frustrated in the way. 
 I briefed an initial game concept in a simplified storyboard on Illustrator (just squares, triangles and circles with descriptions). Then, I presented it to my lecturer and validate immediately the scope and viability of my idea. From that clear concept diagram, I started to work in the code.  
   
+![alt text](https://github.com/Pablolarenas/octet/blob/master/octet/assets/diamonds/idea_images/IMG-20161008-WA0000.jpg)
+*Picture of the initial idea in the board*  
+
+![alt text](https://github.com/Pablolarenas/octet/blob/master/octet/assets/diamonds/idea_images/Chasing%20Diamonds-01.png)
+*fixed diagram in illustrator, shared to the lecturer to validate the idea* 
+  
 **3. THE GAME**   
 - ***3.1 Description***
 	“Sneak” (called Diamond during the process) is a 2D single player game which you assume the identity of a thief who wants to 		steal a diamond in a mysterious tomb.  
 	The camera is on top of the stage, so the player can see the entire room, the diamond and the different obstacles that must sort 	 to reach the treasure, but when the tomb locks, the darkness turns the traps less visible for the player.  
 
-- ***3.2 Gameplay:***
-	• The player is represented by a character (Thief) which is used to play the game.
-	• The character (Thief) can be moved in the primary up/down/left/right directions.
-	• Successfully navigating until to collide with the ‘goal’ (a diamond) the player finishes the level. 
-	• The player must find a path to reach the diamond, avoiding the ‘enemies’ (skulls) and the traps in the level.
-	• If the Thief collides with the skulls, the player loses, and must start again.
-	• If the player passes over a trap the skulls start chasing the Thief until collide with it. 
-	• In this situation, the player can try to reach the diamond before the skulls can collide with it.
+- ***3.2 Gameplay:***  
+	• The player is represented by a character (Thief) which is used to play the game.  
+	• The character (Thief) can be moved in the primary up/down/left/right directions.  
+	• Successfully navigating until to collide with the ‘goal’ (a diamond) the player finishes the level.   
+	• The player must find a path to reach the diamond, avoiding the ‘enemies’ (skulls) and the traps in the level.  
+	• If the Thief collides with the skulls, the player loses, and must start again.  
+	• If the player passes over a trap the skulls start chasing the Thief until collide with it.   
+	• In this situation, the player can try to reach the diamond before the skulls can collide with it.  
+	
   
   
 **4. MAIN GAMEPLAY PROGRAMMING**  
