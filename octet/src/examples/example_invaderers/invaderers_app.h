@@ -59,7 +59,7 @@ namespace octet {
 			enabled = true;
 		}
 
-		void render(texture_shader &shader, mat4t &cameraToWorld) {
+		void render(texture_shader &shader, mat4t &cameraToWorld, vec4 skull_color = {1,1,1,1}) {
 			// invisible sprite... used for gameplay.
 			if (!texture) return;
 
@@ -74,7 +74,7 @@ namespace octet {
 			// use "old skool" rendering
 			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
 			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			shader.render(modelToProjection, 0);
+			shader.render(modelToProjection, 0,skull_color);
 
 			// this is an array of the positions of the corners of the sprite in 3D
 			// a straight "float" here means this array is being generated here at runtime.
@@ -121,7 +121,7 @@ namespace octet {
 			modelToWorld.rotate(angle, 0, 0, 1);
 		}
 
-		// move the object
+		// change texture
 		void change_sprite(int temp_sprite) {
 			texture = temp_sprite;
 		}
@@ -503,7 +503,7 @@ namespace octet {
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, font_texture);
 
-			shader.render(modelToProjection, 0);
+			shader.render(modelToProjection, 0, vec4(1,1,1,1));
 
 			glVertexAttribPointer(attribute_pos, 3, GL_FLOAT, GL_FALSE, sizeof(bitmap_font::vertex), (void*)&vertices[0].x);
 			glEnableVertexAttribArray(attribute_pos);
@@ -514,7 +514,7 @@ namespace octet {
 		}
 
 		// wen the traps are turned in hide mode at the beggining of the stage
-		void turn_sprites_off() {
+		void camouflage_traps() {
 			for (int j = 0; j < num_trap; j++) {
 				sprites[first_trap_sprite_index + j].change_sprite(empty_trap);
 			}
@@ -654,7 +654,7 @@ namespace octet {
 
 				 if (frames == 60)
 				 {
-					 turn_sprites_off();
+					 camouflage_traps();
 					 start_moving = true;
 				 }
 

@@ -12,6 +12,7 @@ namespace octet { namespace shaders {
 
     // index for model space to projection space matrix
     GLuint modelToProjectionIndex_;
+	GLuint colorIndex_; 
 
     // index for texture sampler
     GLuint samplerIndex_;
@@ -39,8 +40,11 @@ namespace octet { namespace shaders {
       const char fragment_shader[] = SHADER_STR(
         varying vec2 uv_;
         uniform sampler2D sampler;
-        void main() { gl_FragColor = texture2D(sampler, uv_); }
+		uniform vec4 skull_color;
+
+        void main() { gl_FragColor = texture2D(sampler, uv_)*skull_color; }
       );
+
     
       // use the common shader code to compile and link the shaders
       // the result is a shader program
@@ -49,14 +53,23 @@ namespace octet { namespace shaders {
       // extract the indices of the uniforms to use later
       modelToProjectionIndex_ = glGetUniformLocation(program(), "modelToProjection");
       samplerIndex_ = glGetUniformLocation(program(), "sampler");
+	  colorIndex_ = glGetUniformLocation(program(), "skull_color");
     }
 
-    void render(const mat4t &modelToProjection, int sampler) {
+    void render(const mat4t &modelToProjection, int sampler,vec4&skull_color) {
       // tell openGL to use the program
       shader::render();
 
       // customize the program with uniforms
       glUniform1i(samplerIndex_, sampler);
+
+	  float skull_color_array[] = {
+		  skull_color.x(),
+		  skull_color.y(),
+		  skull_color.z(),
+		  skull_color.w() };
+	  glUniform4fv(colorIndex_, 1, skull_color_array);
+
       glUniformMatrix4fv(modelToProjectionIndex_, 1, GL_FALSE, modelToProjection.get());
     }
   };
