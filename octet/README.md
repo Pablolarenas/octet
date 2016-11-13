@@ -31,16 +31,16 @@ I briefed an initial game concept in a simplified storyboard on Illustrator (jus
 	• In this situation, the player can try to reach the diamond before the skulls can collide with it.  
 	
 ![alt text](https://github.com/Pablolarenas/octet/blob/master/octet/assets/diamonds/game_shoots/1.png)  
-*main menu*  
-*about button activated: game description, credits and thanks*  
+*Left: Main menu*  
+*Right: About button activated: game description, credits and thanks*  
 
 ![alt text](https://github.com/Pablolarenas/octet/blob/master/octet/assets/diamonds/game_shoots/2.png)  
-*Game start*  
-*The tramps are obscured*  
+*Left: Game loaded*  
+*Right: The tramps are obscured, the game starts*  
 
 ![alt text](https://github.com/Pablolarenas/octet/blob/master/octet/assets/diamonds/game_shoots/3.png)  
-*Chasing and losing*  
-*reaching the diamond!*  
+*Left: Chasing and losing*  
+*Right: Reaching the diamond and winning the game*  
  
   
 **4. MAIN GAMEPLAY PROGRAMMING**  
