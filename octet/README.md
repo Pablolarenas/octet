@@ -30,7 +30,18 @@ I briefed an initial game concept in a simplified storyboard on Illustrator (jus
 	• If the player passes over a trap the skulls start chasing the Thief until collide with it.   
 	• In this situation, the player can try to reach the diamond before the skulls can collide with it.  
 	
-  
+![alt text](https://github.com/Pablolarenas/octet/blob/master/octet/assets/diamonds/game_shoots/1.png)  
+*main menu*  
+*about button activated: game description, credits and thanks*  
+
+![alt text](https://github.com/Pablolarenas/octet/blob/master/octet/assets/diamonds/game_shoots/2.png)  
+*Game start*  
+*The tramps are obscured*  
+
+![alt text](https://github.com/Pablolarenas/octet/blob/master/octet/assets/diamonds/game_shoots/3.png)  
+*Chasing and losing*  
+*reaching the diamond!*  
+ 
   
 **4. MAIN GAMEPLAY PROGRAMMING**  
 - **‘in game’ menu.** To create it, I initialized only the menu elements in the ‘app_init’ function, and just left the resource_dict of the game textures and sound files. The level texture’s inits were moved to a “load_game” function, called in the “simulate” function, to that way I can start the program just with the menu objects: Game logo, Thief (just for select options), an ‘About’ button to describe the game and credits and the ‘Start’ button, to load the level. Once, the thief collides with the start, it is moved and resized at the top of the screen to start the game.  
