@@ -10,10 +10,10 @@ As a graphic designer, my foundations in code were minimum at the start of this 
 To face this assignment (create a new 2d game from invaders example) I started from the place I had some experience: concept and idea of the game, plus some initial mechanics. Defining this in the first place was a useful approach to create a mind map of what kind of things I needed to learn to create the game in a successful way. The benefit of working through a design pathway was that I could organize my workflow in an early stage instead of improvising erratically all the time and get frustrated in the way. 
 I briefed an initial game concept in a simplified storyboard on Illustrator (just squares, triangles and circles with descriptions). Then, I presented it to my lecturer and validate immediately the scope and viability of my idea. From that clear concept diagram, I started to work in the code.  
   
-![alt text](https://github.com/Pablolarenas/octet/blob/master/octet/assets/diamonds/idea_images/IMG-20161008-WA0000.jpg "White board diagramming while assisting")
+![alt text](https://github.com/Pablolarenas/octet/blob/master/octet/assets/diamonds/idea_images/IMG-20161008-WA0000.jpg)
 *Picture of the initial idea in the board*  
 
-![alt text](https://github.com/Pablolarenas/octet/blob/master/octet/assets/diamonds/idea_images/Chasing%20Diamonds-01.png "White board diagramming while assisting")
+![alt text](https://github.com/Pablolarenas/octet/blob/master/octet/assets/diamonds/idea_images/Chasing%20Diamonds-01.png)
 *fixed diagram in illustrator, shared to the lecturer to validate the idea* 
   
 **3. THE GAME**   
